@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One pull request per ecosystem rather than per package: the CI gate is
+      # the same either way, and a single review is more likely to happen.
+      dev-dependencies:
+        dependency-type: development
+      production-dependencies:
+        dependency-type: production
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

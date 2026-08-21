@@ -1,0 +1,49 @@
+name: Release
+
+# Deployment is tag-driven: a semver tag is the only thing that reaches
+# production, so what is live is always an identifiable version. The tag is
+# injected into the Worker as APP_VERSION and reported by GET /api/health.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version string to report from /api/health
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Verify
+        run: pnpm lint && pnpm typecheck && pnpm test && pnpm docs:check
+
+      - name: Build client
+        run: pnpm build
+
+      - name: Deploy Worker and assets
+        working-directory: apps/api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          APP_VERSION: ${{ github.event.inputs.version || github.ref_name }}
+        run: pnpm wrangler deploy --var APP_VERSION:"$APP_VERSION"

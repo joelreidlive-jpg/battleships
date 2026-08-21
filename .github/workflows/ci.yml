@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm vitest run --coverage
+
+      # The published documents are generated from the code they describe.
+      # If a game constant, route or schema changed without regenerating them,
+      # fail here rather than ship documentation that lies.
+      - name: Documentation drift
+        run: pnpm docs:check
+
+      - name: Build client
+        run: pnpm build
