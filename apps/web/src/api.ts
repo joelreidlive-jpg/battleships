@@ -1,5 +1,11 @@
 import type { Difficulty, Placement } from '@bs/rules';
-import type { CreateMatchResponse, MatchView, ProgressResponse, ReferenceResponse } from '@bs/protocol';
+import type {
+  CreateMatchResponse,
+  LeaderboardResponse,
+  MatchView,
+  ProgressResponse,
+  ReferenceResponse,
+} from '@bs/protocol';
 
 /**
  * The bearer token is the player's whole identity. It lives in localStorage
@@ -23,10 +29,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-export async function createMatch(difficulty: Difficulty, fleet?: readonly Placement[]): Promise<MatchView> {
+export interface Names {
+  readonly captain: string;
+  readonly starfleet: string;
+}
+
+export async function createMatch(
+  difficulty: Difficulty,
+  names: Names,
+  fleet?: readonly Placement[],
+): Promise<MatchView> {
   const { playerToken: issued, match } = await request<CreateMatchResponse>('/api/matches', {
     method: 'POST',
-    body: JSON.stringify({ difficulty, ...(fleet ? { fleet } : {}) }),
+    body: JSON.stringify({ difficulty, ...names, ...(fleet ? { fleet } : {}) }),
   });
   localStorage.setItem(TOKEN_KEY, issued);
   return match;
@@ -42,6 +57,10 @@ export function resign(matchId: string): Promise<MatchView> {
 
 export function progress(): Promise<ProgressResponse> {
   return request<ProgressResponse>('/api/me/progress');
+}
+
+export function leaderboard(): Promise<LeaderboardResponse> {
+  return request<LeaderboardResponse>('/api/leaderboard');
 }
 
 export function reference(): Promise<ReferenceResponse> {

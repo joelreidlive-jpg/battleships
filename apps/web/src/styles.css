@@ -900,3 +900,176 @@ button.primary {
     clip-path: none;
   }
 }
+
+/* Whoever holds the guns, painted. Sits over the top-right of the grids. */
+.boards {
+  position: relative;
+}
+
+.portrait {
+  position: absolute;
+  top: -14px;
+  right: -6px;
+  z-index: 4;
+  margin: 0;
+  width: 132px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.portrait img {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--amber);
+  box-shadow: 0 0 22px rgba(226, 163, 45, 0.35);
+  transition: border-color 0.3s ease;
+}
+
+.portrait--alien img {
+  border-color: #6fae9f;
+  box-shadow: 0 0 22px rgba(111, 174, 159, 0.4);
+}
+
+.portrait--react img {
+  animation: portrait-jolt 0.5s ease-out 2;
+}
+
+.portrait figcaption {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cream);
+  opacity: 0.8;
+}
+
+@keyframes portrait-jolt {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  35% {
+    transform: scale(1.09) rotate(-3deg);
+  }
+  70% {
+    transform: scale(1.05) rotate(3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Score strip along the foot of every screen. */
+.scoreline {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  padding: 8px 16px;
+  background: linear-gradient(to top, rgba(12, 6, 3, 0.96), rgba(74, 37, 17, 0.9));
+  border-top: 3px solid var(--orange);
+  font-family: var(--display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  color: var(--cream);
+}
+
+.scoreline strong {
+  color: var(--gold);
+  font-size: 1.05rem;
+}
+
+/* The board the flypast cuts to. */
+.flypast--board {
+  animation: none;
+  cursor: default;
+  align-content: center;
+  grid-auto-flow: row;
+  gap: 16px;
+  padding: 28px 16px 64px;
+  overflow-y: auto;
+}
+
+.flypast--board .flypast__words {
+  position: static;
+  grid-area: auto;
+  clip-path: none;
+  animation: none;
+}
+
+.flypast__words--flash {
+  animation: hiscore-flash 0.7s steps(1, end) infinite !important;
+}
+
+.leaderboard {
+  width: min(760px, 94vw);
+  max-height: 56vh;
+  overflow-y: auto;
+  border: 2px solid var(--orange);
+  border-radius: 6px;
+  background: rgba(28, 14, 6, 0.92);
+}
+
+.leaderboard table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.leaderboard th,
+.leaderboard td {
+  padding: 7px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(226, 163, 45, 0.18);
+}
+
+.leaderboard thead th {
+  position: sticky;
+  top: 0;
+  background: var(--brown);
+  color: var(--amber);
+  font-family: var(--display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+}
+
+.leaderboard td:last-child,
+.leaderboard th:last-child {
+  text-align: right;
+}
+
+.leaderboard__you {
+  background: rgba(210, 96, 26, 0.35);
+  color: var(--gold);
+  font-weight: 700;
+  outline: 2px solid var(--amber);
+}
+
+@keyframes hiscore-flash {
+  0% {
+    opacity: 1;
+    color: var(--gold);
+  }
+  50% {
+    opacity: 0.25;
+    color: #fff2d0;
+  }
+  100% {
+    opacity: 1;
+    color: var(--gold);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portrait--react img,
+  .flypast__words--flash {
+    animation: none !important;
+  }
+}

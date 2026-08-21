@@ -57,6 +57,13 @@ export const API_ROUTES: readonly RouteSpec[] = [
   },
   {
     method: 'GET',
+    path: '/api/leaderboard',
+    summary: 'The shared board of best campaigns, seeded captains included.',
+    auth: false,
+    responseType: 'LeaderboardResponse',
+  },
+  {
+    method: 'GET',
     path: '/api/fleet',
     summary: 'Fleet roster, grid size, scoring table and difficulty doctrines. Public reference data.',
     auth: false,

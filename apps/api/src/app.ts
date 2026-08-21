@@ -13,12 +13,14 @@ import type {
   CreateMatchRequest,
   FireRequest,
   HealthResponse,
+  LeaderboardResponse,
   ProgressResponse,
   ReferenceResponse,
 } from '@bs/protocol';
 import { MatchError } from './errors.js';
 import type { MatchDO } from './match-do.js';
 import { loadProgress, newPlayerToken, playerKey, recentGames } from './players.js';
+import { board } from './leaderboard.js';
 
 // The Durable Object class is imported for its *type* only, so this module
 // stays loadable outside the Workers runtime and the route table can be
@@ -89,6 +91,15 @@ app.get('/api/me/progress', async (c) => {
     rank: rankFor(progress.totalScore),
     recentGames: await recentGames(c.env.DB, key),
   };
+  return c.json(response);
+});
+
+app.get('/api/leaderboard', async (c) => {
+  const header = c.req.header('x-player-token');
+  const response: LeaderboardResponse = await board(
+    c.env.DB,
+    header ? await playerKey(header) : undefined,
+  );
   return c.json(response);
 });
 

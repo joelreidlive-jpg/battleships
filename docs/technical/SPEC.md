@@ -328,6 +328,7 @@ All responses are JSON. Errors are `{ "error": string }` with status 400
 | `POST /api/matches/:id/fire` | yes | `FireRequest` | `MatchView` | Fire at one cell of the invader grid; the invader replies in the same call. |
 | `POST /api/matches/:id/resign` | yes | — | `MatchView` | Concede the campaign. The invader fleet is revealed. |
 | `GET /api/me/progress` | yes | — | `ProgressResponse` | Career record and rank for the bearer token. |
+| `GET /api/leaderboard` | no | — | `LeaderboardResponse` | The shared board of best campaigns, seeded captains included. |
 | `GET /api/fleet` | no | — | `ReferenceResponse` | Fleet roster, grid size, scoring table and difficulty doctrines. Public reference data. |
 | `GET /api/health` | no | — | `HealthResponse` | Liveness probe with the deployed version. |
 
@@ -416,6 +417,9 @@ export interface CreateMatchRequest {
   readonly difficulty?: Difficulty;
   /** Omit to have Fleet Command deploy for you. */
   readonly fleet?: readonly Placement[];
+  /** Names from the briefing, carried so a finished campaign can be posted to the board. */
+  readonly captain?: string;
+  readonly starfleet?: string;
 }
 
 export interface CreateMatchResponse {
@@ -488,6 +492,25 @@ export interface ReferenceResponse {
 export interface HealthResponse {
   readonly status: 'ok';
   readonly version: string;
+}
+
+/** One row of the shared board. Ranks are 1-based and dense from the top. */
+export interface LeaderboardEntry {
+  readonly rank: number;
+  readonly captain: string;
+  readonly starfleet: string;
+  readonly difficulty: Difficulty;
+  readonly won: boolean;
+  readonly score: number;
+  readonly achievedAt: number;
+  /** True when this row was posted by the bearer of the calling token. */
+  readonly you: boolean;
+}
+
+export interface LeaderboardResponse {
+  readonly entries: readonly LeaderboardEntry[];
+  /** The caller's best rank within `entries`, when they hold one. */
+  readonly yourRank?: number;
 }
 
 export interface ErrorResponse {

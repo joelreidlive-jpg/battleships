@@ -137,6 +137,20 @@ paths:
           description: 'Malformed request or illegal move'
         '401':
           description: 'Missing player token'
+  /api/leaderboard:
+    get:
+      summary: "The shared board of best campaigns, seeded captains included."
+      operationId: getApiLeaderboard
+      security: []
+      responses:
+        '200':
+          description: "LeaderboardResponse"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardResponse'
+        '400':
+          description: 'Malformed request or illegal move'
   /api/fleet:
     get:
       summary: "Fleet roster, grid size, scoring table and difficulty doctrines. Public reference data."

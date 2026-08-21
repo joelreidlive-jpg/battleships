@@ -42,6 +42,7 @@ export function productGuide(): string {
     workedExample(),
     difficulty(),
     progression(),
+    theBoardOfCaptains(),
   ].join('\n');
 }
 
@@ -128,6 +129,11 @@ function howATurnWorks(): string {
 Turn order strictly alternates. A hit does not earn a second shot, so both
 sides always have taken the same number of shots — which is what makes
 accuracy worth scoring.
+
+The portrait beside the grids shows whoever currently holds the guns: your
+captain while the shot is yours, the Kraal warlord while the invader takes its
+time over the reply. Destroy one of theirs and your captain punches the air;
+lose one of yours and the warlord laughs.
 
 `;
 }
@@ -239,6 +245,21 @@ whole grid, so lower means a shorter, more dangerous campaign. Your four
 single-section submarines are pure luck to find, and cost every invader about
 the same, so they are left out of the comparison. Against ${DOCTRINE_LIST[2].name} expect
 to lose ships roughly twice as fast as against ${DOCTRINE_LIST[0].name}.
+
+`;
+}
+
+function theBoardOfCaptains(): string {
+  return `## The board of captains
+
+Your score and your best score sit along the foot of the screen throughout.
+Every finished campaign is posted to a single board shared by everyone playing,
+under the captain and starfleet names you signed at your briefing — so the
+captains already on it are the ones you have to beat.
+
+Win a campaign, or beat your own best, and the flypast gives way to that board
+with your entry marked and scrolled to. Beating your best is called out in
+lights before the list appears.
 
 `;
 }
