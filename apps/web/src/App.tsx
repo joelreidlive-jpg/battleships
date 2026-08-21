@@ -14,6 +14,7 @@ import { Board } from './Board.js';
 import { Briefing } from './Briefing.js';
 import { type Commission, saveCommission, storedCommission } from './commission.js';
 import { Deploy } from './Deploy.js';
+import { Flypast } from './Flypast.js';
 import { Manual } from './Manual.js';
 import * as api from './api.js';
 import * as sound from './sound.js';
@@ -33,6 +34,8 @@ export function App() {
   const [manual, setManual] = useState(false);
   const [commission, setCommission] = useState<Commission | null>(storedCommission);
   const [mute, setMute] = useState(sound.muted);
+  /** Set when a campaign ends, cleared once the flypast has run. */
+  const [flypast, setFlypast] = useState<boolean | null>(null);
   /** Log entries already sounded, so a re-render never replays an explosion. */
   const heard = useRef(0);
 
@@ -61,7 +64,10 @@ export function App() {
       const view = await action();
       setMatch(view);
       announce(view);
-      if (view.status === 'finished') refreshCareer();
+      if (view.status === 'finished') {
+        refreshCareer();
+        setFlypast(view.winner === 'earth');
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'the transmission failed');
     } finally {
@@ -71,6 +77,7 @@ export function App() {
 
   const launch = (fleet: readonly Placement[] | undefined) => {
     heard.current = 0;
+    setFlypast(null);
     return run(() => api.createMatch(difficulty, fleet));
   };
 
@@ -147,6 +154,8 @@ export function App() {
           onNewCampaign={() => setMatch(null)}
         />
       )}
+
+      {flypast === null ? null : <Flypast won={flypast} onDone={() => setFlypast(null)} />}
 
       {manual ? <Manual onClose={() => setManual(false)} /> : null}
     </div>

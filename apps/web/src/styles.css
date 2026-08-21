@@ -813,3 +813,86 @@ button.primary {
   color: var(--gold);
   font-style: italic;
 }
+
+/* Curtain call: a hull crosses the screen and leaves the verdict behind it. */
+.flypast {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 45%, rgba(60, 26, 8, 0.86), rgba(12, 6, 3, 0.96));
+  cursor: pointer;
+  overflow: hidden;
+  animation: flypast-fade 6.2s ease-out forwards;
+}
+
+.flypast__words {
+  margin: 0;
+  grid-area: 1 / 1;
+  font-family: var(--display);
+  font-size: clamp(1.9rem, 6.4vw, 4.8rem);
+  max-width: 94vw;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--gold);
+  text-shadow: 0 0 26px rgba(226, 163, 45, 0.5);
+  clip-path: inset(0 100% 0 0);
+  animation: flypast-reveal 4.6s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+.flypast--loss .flypast__words {
+  color: #e2603a;
+  text-shadow: 0 0 26px rgba(226, 96, 58, 0.55);
+}
+
+.flypast__craft {
+  grid-area: 1 / 1;
+  width: min(38vw, 420px);
+  height: auto;
+  overflow: visible;
+  animation: flypast-cross 4.6s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes flypast-cross {
+  from {
+    transform: translateX(-115vw);
+  }
+  to {
+    transform: translateX(115vw);
+  }
+}
+
+@keyframes flypast-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes flypast-fade {
+  0%,
+  86% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flypast__craft,
+  .flypast__words,
+  .flypast {
+    animation-duration: 0.01s;
+    animation-fill-mode: forwards;
+  }
+
+  .flypast__words {
+    clip-path: none;
+  }
+}
