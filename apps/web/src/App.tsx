@@ -48,7 +48,7 @@ export function App() {
       <div className="scanlines" aria-hidden="true" />
       <header className="masthead">
         <div>
-          <h1>Orbital Defence Command</h1>
+          <h1>Orbital Battleships Command</h1>
           <p>Earth stands alone. Find their fleet before they find yours.</p>
         </div>
         <div className="masthead__right">

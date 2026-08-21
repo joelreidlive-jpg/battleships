@@ -28,7 +28,7 @@ export function technicalSpec(root: string): string {
   const read = (relative: string) => readFileSync(join(root, relative), 'utf8').trimEnd();
 
   return [
-    '# Orbital Defence Command — technical specification',
+    '# Orbital Battleships Command — technical specification',
     '',
     GENERATED_BANNER,
     '',
