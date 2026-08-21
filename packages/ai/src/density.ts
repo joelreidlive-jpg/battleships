@@ -1,4 +1,4 @@
-import { type Cell, candidatePlacements, placementCells, shipClass } from '@bs/rules';
+import { type Cell, candidatePlacements, hullSections, placementCells } from '@bs/rules';
 import type { Intel } from './intel.js';
 
 /**
@@ -13,7 +13,7 @@ export const OPEN_HIT_WEIGHT = 50;
  * How many ways the surviving hulls could still cover each untried cell.
  *
  * This is the exact count over all placements consistent with the shot
- * history — no sampling — which is cheap here: five hulls, 100 cells, at most
+ * history — no sampling — which is cheap here: ten hulls, 100 cells, at most
  * a few thousand candidate placements per turn.
  */
 export function densityMap(intel: Intel): Map<Cell, number> {
@@ -21,9 +21,9 @@ export function densityMap(intel: Intel): Map<Cell, number> {
   const blocked = new Set<Cell>([...intel.misses, ...intel.resolvedHits]);
   const density = new Map<Cell, number>();
 
-  for (const ship of intel.remaining) {
-    const sections = shipClass(ship).sections;
-    for (const placement of candidatePlacements(ship)) {
+  for (const hull of intel.remaining) {
+    const sections = hullSections(hull);
+    for (const placement of candidatePlacements(hull)) {
       const cells = placementCells(placement);
       if (cells.some((cell) => blocked.has(cell))) continue;
 

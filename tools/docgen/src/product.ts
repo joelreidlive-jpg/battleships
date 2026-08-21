@@ -2,6 +2,7 @@ import {
   COLUMNS,
   COLUMN_LABELS,
   FLEET,
+  HULLS,
   PERFECT_SHOT_COUNT,
   RANKS,
   ROWS,
@@ -71,18 +72,19 @@ row of the second column.
 
 function theFleet(): string {
   const rows = FLEET.map(
-    (ship) => `| ${ship.sections} | ${ship.earthName} | ${ship.alienName} | ${ship.blurb} |`,
+    (ship) => `| ${ship.count} | ${ship.sections} | ${ship.earthName} | ${ship.alienName} | ${ship.blurb} |`,
   ).join('\n');
   return `## The fleets
 
-Both sides field the same five hulls — the classic Battleship line-up — under
-different names.
+Both sides field the same ${HULLS.length} hulls under different names. Where a class is
+deployed more than once the individual craft are numbered — Ion Cruiser I and
+Ion Cruiser II — and each is positioned, damaged and destroyed separately.
 
-| Sections | Earth Defence Wing | Invasion Fleet | Notes |
-| --- | --- | --- | --- |
+| Count | Sections each | Earth Defence Wing | Invasion Fleet | Notes |
+| --- | --- | --- | --- | --- |
 ${rows}
 
-That is **${TOTAL_SECTIONS} sections** per side. A hull occupies that many adjacent sectors in a
+That is **${HULLS.length} hulls, ${TOTAL_SECTIONS} sections** per side. A hull occupies that many adjacent sectors in a
 straight line, north–south or east–west. Hulls may not overlap and may not run
 off the edge of the grid, but they *may* sit alongside one another — the
 standard rule, and one a careful player can use to hide a short hull against a
@@ -103,8 +105,9 @@ function howATurnWorks(): string {
 2. The result is announced immediately:
    - **Miss** — nothing there.
    - **Hit** — you struck a hull, but you are *not* told which one.
-   - **Destroyed** — that hit was the hull's last intact section, and the class
-     is named.
+   - **Destroyed** — that hit was the hull's last intact section, and that
+     individual craft is named. A single-section submarine is therefore
+     destroyed by the first hit that finds it.
 3. **The invader fires back** at one sector of your Home Grid, and the same
    three results apply.
 
@@ -118,7 +121,7 @@ accuracy worth scoring.
 function winning(): string {
   return `## Winning
 
-The first side to destroy all ${FLEET.length} of the opponent's hulls — all ${TOTAL_SECTIONS} sections — wins
+The first side to destroy all ${HULLS.length} of the opponent's hulls — all ${TOTAL_SECTIONS} sections — wins
 immediately. Because you fire first, the invader does not get a reply to the
 shot that destroys its last hull.
 
@@ -153,11 +156,18 @@ produce.
 
 /** Played through the real engine, so the arithmetic cannot be wrong. */
 function workedExample(): string {
-  const earth: Placement[] = FLEET.map((ship, index) => ({
-    ship: ship.id,
-    origin: cellAt(0, index),
-    orientation: 'horizontal' as const,
-  }));
+  // Packed left to right, wrapping at the edge of the grid: two full rows.
+  const earth: Placement[] = [];
+  let column = 0;
+  let row = 0;
+  for (const hull of HULLS) {
+    if (column + hull.sections > COLUMNS) {
+      row += 1;
+      column = 0;
+    }
+    earth.push({ hull: hull.id, origin: cellAt(column, row), orientation: 'horizontal' });
+    column += hull.sections;
+  }
   const alien: Placement[] = earth.map((placement) => ({ ...placement, origin: placement.origin + 50 }));
 
   let state = newGame(earth, alien);
@@ -167,7 +177,7 @@ function workedExample(): string {
     if (state.status === 'finished') break;
     state = fire(state, 'earth', cell).state;
     if (state.status === 'finished') break;
-    // The invader lands three hits on the Orbital Carrier over the campaign.
+    // The invader lands three hits on the flagship over the campaign.
     state = fire(state, 'alien', miss < 3 ? cellAt(miss, 0) : cellAt(miss % COLUMNS, ROWS - 1 - Math.floor(miss / COLUMNS))).state;
     miss++;
   }
@@ -176,7 +186,7 @@ function workedExample(): string {
   return `### A worked example
 
 A campaign against **${DOCTRINE_LIST[1].name}** in which you find every hull without a wasted
-shot, while the invader lands three hits on your Orbital Carrier:
+shot, while the invader lands three hits on your ${FLEET[0].earthName}:
 
 | Line | Score |
 | --- | --- |
@@ -196,20 +206,23 @@ shot, while the invader lands three hits on your Orbital Carrier:
 function difficulty(): string {
   const rows = DOCTRINE_LIST.map(
     (doctrine) =>
-      `| ${doctrine.name} | x${doctrine.scoreMultiplier} | ${doctrine.expectedShots} | ${doctrine.targeting} |`,
+      `| ${doctrine.name} | x${doctrine.scoreMultiplier} | ${doctrine.expectedShots} | ${doctrine.expectedHuntShots} | ${doctrine.targeting} |`,
   ).join('\n');
   return `## Invasion doctrines
 
 Difficulty is the invader's targeting doctrine. Nothing else changes: the
 grid, the fleets and the scoring are identical at every level.
 
-| Doctrine | Score multiplier | Mean shots to clear a fleet | How it aims |
-| --- | --- | --- | --- |
+| Doctrine | Score multiplier | Mean shots to clear a fleet | Mean shots to the last multi-section hull | How it aims |
+| --- | --- | --- | --- | --- |
 ${rows}
 
-"Mean shots to clear a fleet" is measured over 300 simulated campaigns; ${PERFECT_SHOT_COUNT} is
-perfect and 100 is the whole grid. It is the honest way to compare the three:
-${DOCTRINE_LIST[2].name} needs roughly half the shots ${DOCTRINE_LIST[0].name} does.
+Both figures are measured over 300 simulated campaigns; ${PERFECT_SHOT_COUNT} shots is perfect and
+100 is the whole grid. The second column is the fairer comparison: a
+single-section submarine leaves nothing to deduce, so the last four kills are a
+search that costs every doctrine about the same, which flattens the first
+column. On the hulls where skill applies, ${DOCTRINE_LIST[2].name} needs roughly half the
+shots ${DOCTRINE_LIST[0].name} does.
 
 `;
 }

@@ -4,14 +4,17 @@ import {
   COLUMNS,
   COLUMN_LABELS,
   ROWS,
+  type HullId,
   type Placement,
   type Shot,
+  type Side,
   cellAt,
   columnOf,
   formatCell,
-  placementCells,
+  hullSections,
   rowOf,
 } from '@bs/rules';
+import { Ship } from './Ship.js';
 
 const CELL = 42;
 const GUTTER = 26;
@@ -28,9 +31,23 @@ export interface BoardProps {
   /** Cells the pending deployment would occupy, and whether it is legal. */
   readonly ghost?: { readonly cells: readonly Cell[]; readonly legal: boolean };
   readonly onHover?: (cell: Cell | null) => void;
+  /** Whose craft these are, which is what they are drawn as. */
+  readonly side?: Side;
+  readonly sunk?: readonly HullId[];
 }
 
-export function Board({ title, subtitle, shots, fleet, onFire, disabled, ghost, onHover }: BoardProps) {
+export function Board({
+  title,
+  subtitle,
+  shots,
+  fleet,
+  onFire,
+  disabled,
+  ghost,
+  onHover,
+  side = 'earth',
+  sunk = [],
+}: BoardProps) {
   const byCell = useMemo(() => new Map(shots.map((shot) => [shot.cell, shot])), [shots]);
   const ghostCells = useMemo(() => new Set(ghost?.cells ?? []), [ghost]);
   const width = GUTTER + COLUMNS * CELL + 2;
@@ -91,18 +108,19 @@ export function Board({ title, subtitle, shots, fleet, onFire, disabled, ghost, 
             below the shot marks so damage stays legible. */}
         <g className="overlay">
           {fleet?.map((placement) => {
-            const cells = placementCells(placement);
-            const first = cells[0];
+            const sections = hullSections(placement.hull);
             const horizontal = placement.orientation === 'horizontal';
+            const span = (sections * CELL) / 2;
             return (
-              <rect
-                key={placement.ship}
-                className="hull"
-                x={GUTTER + columnOf(first) * CELL + 5}
-                y={GUTTER + rowOf(first) * CELL + 5}
-                width={(horizontal ? cells.length : 1) * CELL - 10}
-                height={(horizontal ? 1 : cells.length) * CELL - 10}
-                rx={CELL / 2 - 5}
+              <Ship
+                key={placement.hull}
+                hull={placement.hull}
+                orientation={placement.orientation}
+                cx={GUTTER + columnOf(placement.origin) * CELL + (horizontal ? span : CELL / 2)}
+                cy={GUTTER + rowOf(placement.origin) * CELL + (horizontal ? CELL / 2 : span)}
+                cell={CELL}
+                side={side}
+                sunk={sunk.includes(placement.hull)}
               />
             );
           })}

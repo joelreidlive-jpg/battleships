@@ -1,6 +1,7 @@
 import type {
   Cell,
   Difficulty,
+  HullId,
   Placement,
   ScoreBreakdown,
   ShipClassId,
@@ -23,13 +24,13 @@ export interface DefenceView {
   readonly fleet: readonly Placement[];
   /** Shots the invader has fired at the player. */
   readonly shots: readonly Shot[];
-  readonly sunk: readonly ShipClassId[];
+  readonly sunk: readonly HullId[];
 }
 
 export interface OffenceView {
   /** The player's own shots. A hull's identity appears only when it sinks. */
   readonly shots: readonly Shot[];
-  readonly sunk: readonly ShipClassId[];
+  readonly sunk: readonly HullId[];
 }
 
 export interface LogEntry {
@@ -37,7 +38,7 @@ export interface LogEntry {
   readonly side: Side;
   readonly cell: Cell;
   readonly outcome: Shot['outcome'];
-  readonly ship?: ShipClassId;
+  readonly hull?: HullId;
   /** Pre-rendered so the transcript reads identically everywhere. */
   readonly text: string;
 }
@@ -116,6 +117,8 @@ export interface ReferenceResponse {
   readonly fleet: readonly {
     readonly id: ShipClassId;
     readonly sections: number;
+    /** How many hulls of this class each side deploys. */
+    readonly count: number;
     readonly earthName: string;
     readonly alienName: string;
     readonly blurb: string;

@@ -95,9 +95,10 @@ app.get('/api/me/progress', async (c) => {
 app.get('/api/fleet', (c) => {
   const response: ReferenceResponse = {
     grid: { columns: COLUMNS, rows: ROWS, columnLabels: COLUMN_LABELS },
-    fleet: FLEET.map(({ id, sections, earthName, alienName, blurb }) => ({
+    fleet: FLEET.map(({ id, sections, count, earthName, alienName, blurb }) => ({
       id,
       sections,
+      count,
       earthName,
       alienName,
       blurb,

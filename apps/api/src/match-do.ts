@@ -10,14 +10,14 @@ import {
   RuleError,
   fire,
   formatCell,
+  hullName,
   isDifficulty,
   newGame,
   redactShot,
   scoreFor,
-  shipName,
   shotProblem,
   statsFor,
-  sunkShips,
+  sunkHulls,
   validateFleet,
 } from '@bs/rules';
 import { chooseShot, randomFleet } from '@bs/ai';
@@ -159,9 +159,16 @@ export class MatchDO extends DurableObject<Env> {
         ? `${who} fires on ${target} — nothing but vacuum.`
         : shot.outcome === 'hit'
           ? `${who} fires on ${target} — a hull is struck.`
-          : `${who} fires on ${target} — the ${shipName(shot.ship!, defender)} is destroyed.`;
+          : `${who} fires on ${target} — the ${hullName(shot.hull!, defender)} is destroyed.`;
     // A hit names no hull: the shooter learns that only when it sinks.
-    return { seq, side, cell: shot.cell, outcome: shot.outcome, ...(shot.ship && shot.outcome === 'sunk' ? { ship: shot.ship } : {}), text };
+    return {
+      seq,
+      side,
+      cell: shot.cell,
+      outcome: shot.outcome,
+      ...(shot.hull && shot.outcome === 'sunk' ? { hull: shot.hull } : {}),
+      text,
+    };
   }
 
   private async authorise(token: string): Promise<GameState> {
@@ -208,11 +215,11 @@ export class MatchDO extends DurableObject<Env> {
       defence: {
         fleet: state.earth.fleet,
         shots: state.earth.shots.map(redactShot),
-        sunk: sunkShips(state.earth),
+        sunk: sunkHulls(state.earth),
       },
       offence: {
         shots: state.alien.shots.map(redactShot),
-        sunk: sunkShips(state.alien),
+        sunk: sunkHulls(state.alien),
       },
       ...(finished ? { alienFleet: state.alien.fleet as Placement[] } : {}),
       score: scoreFor(state, meta.difficulty),

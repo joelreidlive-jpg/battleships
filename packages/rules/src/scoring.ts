@@ -1,6 +1,6 @@
-import { TOTAL_SECTIONS, shipClass } from './fleet.js';
+import { TOTAL_SECTIONS, hullSections } from './fleet.js';
 import { type Difficulty, SCORE_MULTIPLIER } from './difficulty.js';
-import { type GameState, gridOf, opponent, statsFor, sunkShips } from './game.js';
+import { type GameState, gridOf, opponent, statsFor, sunkHulls } from './game.js';
 
 /**
  * Every scoring constant, in one object, because this is the table a product
@@ -18,11 +18,11 @@ export const SCORING = {
   accuracyBonus: 1000,
   /** Per section of the player's own fleet still intact, on victory only. */
   survivingSection: 200,
-  /** Deducted per shot beyond the 17 a perfect game needs. */
+  /** Deducted per shot beyond the one-per-enemy-section a perfect game needs. */
   wastedShot: 10,
 } as const;
 
-/** 17 shots — one per enemy section — is a flawless campaign. */
+/** One shot per enemy section is a flawless campaign. */
 export const PERFECT_SHOT_COUNT = TOTAL_SECTIONS;
 
 export interface ScoreBreakdown {
@@ -49,7 +49,7 @@ export function scoreFor(state: GameState, difficulty: Difficulty): ScoreBreakdo
   const won = state.status === 'finished' && state.winner === 'earth';
 
   const hits = stats.hits * SCORING.hit;
-  const sinks = sunkShips(enemy).reduce((sum, ship) => sum + shipClass(ship).sections * SCORING.sinkPerSection, 0);
+  const sinks = sunkHulls(enemy).reduce((sum, hull) => sum + hullSections(hull) * SCORING.sinkPerSection, 0);
   const wastedShots = Math.max(0, stats.shots - PERFECT_SHOT_COUNT) * SCORING.wastedShot;
   const accuracy = won ? Math.round(SCORING.accuracyBonus * stats.accuracy) : 0;
   const survival = won ? stats.sectionsRemaining * SCORING.survivingSection : 0;
@@ -70,7 +70,7 @@ export function scoreFor(state: GameState, difficulty: Difficulty): ScoreBreakdo
   };
 }
 
-/** The highest score reachable: 17 shots, no losses, on the hardest doctrine. */
+/** The highest score reachable: no wasted shots, no losses, on this doctrine. */
 export function maximumScore(difficulty: Difficulty): number {
   const subtotal =
     TOTAL_SECTIONS * SCORING.hit +

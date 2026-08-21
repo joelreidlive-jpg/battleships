@@ -1,18 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import { COLUMN_LABELS, cellAt, formatCell, neighbours, parseCell } from './grid.js';
-import { FLEET, TOTAL_SECTIONS, shipName } from './fleet.js';
+import { FLEET, HULLS, TOTAL_SECTIONS, hullName, shipName } from './fleet.js';
 import { type Placement, candidatePlacements, placementCells, validateFleet } from './placement.js';
 import { RuleError, fire, isSunk, newGame, redactShot, statsFor } from './game.js';
 import { PERFECT_SHOT_COUNT, SCORING, maximumScore, scoreFor } from './scoring.js';
 import { rankFor } from './ranks.js';
 
-/** Five hulls laid out in rows 1-5, well clear of each other. */
+/** All ten hulls laid out in rows 1-4, well clear of each other. */
 const EARTH_FLEET: Placement[] = [
-  { ship: 'carrier', origin: cellAt(0, 0), orientation: 'horizontal' },
-  { ship: 'battlecruiser', origin: cellAt(0, 1), orientation: 'horizontal' },
-  { ship: 'cruiser', origin: cellAt(0, 2), orientation: 'horizontal' },
-  { ship: 'submersible', origin: cellAt(0, 3), orientation: 'horizontal' },
-  { ship: 'interceptor', origin: cellAt(0, 4), orientation: 'horizontal' },
+  { hull: 'battleship-1', origin: cellAt(0, 0), orientation: 'horizontal' },
+  { hull: 'cruiser-1', origin: cellAt(0, 1), orientation: 'horizontal' },
+  { hull: 'cruiser-2', origin: cellAt(4, 1), orientation: 'horizontal' },
+  { hull: 'destroyer-1', origin: cellAt(0, 2), orientation: 'horizontal' },
+  { hull: 'destroyer-2', origin: cellAt(3, 2), orientation: 'horizontal' },
+  { hull: 'destroyer-3', origin: cellAt(6, 2), orientation: 'horizontal' },
+  { hull: 'submarine-1', origin: cellAt(0, 3), orientation: 'horizontal' },
+  { hull: 'submarine-2', origin: cellAt(2, 3), orientation: 'horizontal' },
+  { hull: 'submarine-3', origin: cellAt(4, 3), orientation: 'horizontal' },
+  { hull: 'submarine-4', origin: cellAt(6, 3), orientation: 'horizontal' },
 ];
 
 /** The same fleet on the far side of the grid. */
@@ -47,13 +52,24 @@ describe('grid', () => {
 });
 
 describe('fleet', () => {
-  it('keeps the classic hull sizes', () => {
-    expect(FLEET.map((ship) => ship.sections)).toEqual([5, 4, 3, 3, 2]);
-    expect(TOTAL_SECTIONS).toBe(17);
+  it('deploys one battleship, two cruisers, three destroyers and four submarines', () => {
+    expect(FLEET.map((ship) => [ship.sections, ship.count])).toEqual([
+      [4, 1],
+      [3, 2],
+      [2, 3],
+      [1, 4],
+    ]);
+    expect(HULLS).toHaveLength(10);
+    expect(TOTAL_SECTIONS).toBe(20);
   });
 
   it('names the same hull differently for each side', () => {
-    expect(shipName('carrier', 'earth')).not.toBe(shipName('carrier', 'alien'));
+    expect(shipName('cruiser', 'earth')).not.toBe(shipName('cruiser', 'alien'));
+  });
+
+  it('numbers hulls whose class is deployed more than once', () => {
+    expect(hullName('battleship-1', 'earth')).not.toMatch(/ I+$/);
+    expect(hullName('cruiser-2', 'earth')).toMatch(/ II$/);
   });
 });
 
@@ -81,20 +97,17 @@ describe('placement', () => {
   });
 
   it('allows hulls to touch, as the standard rules do', () => {
-    const touching: Placement[] = [
-      { ship: 'carrier', origin: cellAt(0, 0), orientation: 'horizontal' },
-      { ship: 'battlecruiser', origin: cellAt(0, 1), orientation: 'horizontal' },
-      { ship: 'cruiser', origin: cellAt(4, 1), orientation: 'horizontal' },
-      { ship: 'submersible', origin: cellAt(0, 2), orientation: 'horizontal' },
-      { ship: 'interceptor', origin: cellAt(3, 2), orientation: 'horizontal' },
-    ];
+    const touching: Placement[] = EARTH_FLEET.map((placement, index) =>
+      index === 1 ? { ...placement, origin: cellAt(4, 0) } : placement,
+    );
     expect(validateFleet(touching)).toBeNull();
   });
 
   it('enumerates every legal position for a hull', () => {
-    // A 5-cell hull has 6 origins per row and 6 per column, both axes.
-    expect(candidatePlacements('carrier')).toHaveLength(120);
-    expect(candidatePlacements('interceptor')).toHaveLength(180);
+    // A 4-cell hull has 7 origins per row and 7 per column, both axes.
+    expect(candidatePlacements('battleship-1')).toHaveLength(140);
+    // A single-section hull is enumerated once per cell, not once per axis.
+    expect(candidatePlacements('submarine-1')).toHaveLength(100);
   });
 });
 
@@ -118,19 +131,26 @@ describe('firing', () => {
 
   it('reports a sinking only on the last section', () => {
     let state = newGame(EARTH_FLEET, ALIEN_FLEET);
-    const interceptor = placementCells(ALIEN_FLEET[4]);
-    let result = fire(state, 'earth', interceptor[0]);
+    const destroyer = placementCells(ALIEN_FLEET[3]);
+    let result = fire(state, 'earth', destroyer[0]);
     expect(result.shot.outcome).toBe('hit');
     state = fire(result.state, 'alien', 99).state;
-    result = fire(state, 'earth', interceptor[1]);
+    result = fire(state, 'earth', destroyer[1]);
     expect(result.shot.outcome).toBe('sunk');
-    expect(result.shot.ship).toBe('interceptor');
-    expect(isSunk(result.state.alien, 'interceptor')).toBe(true);
+    expect(result.shot.hull).toBe('destroyer-1');
+    expect(isSunk(result.state.alien, 'destroyer-1')).toBe(true);
+  });
+
+  it('sinks a single-section submarine on the first hit', () => {
+    const state = newGame(EARTH_FLEET, ALIEN_FLEET);
+    const result = fire(state, 'earth', ALIEN_FLEET[6].origin);
+    expect(result.shot.outcome).toBe('sunk');
+    expect(result.shot.hull).toBe('submarine-1');
   });
 
   it('hides which hull was struck until it sinks', () => {
-    expect(redactShot({ cell: 4, outcome: 'hit', ship: 'carrier' }).ship).toBeUndefined();
-    expect(redactShot({ cell: 4, outcome: 'sunk', ship: 'carrier' }).ship).toBe('carrier');
+    expect(redactShot({ cell: 4, outcome: 'hit', hull: 'cruiser-1' }).hull).toBeUndefined();
+    expect(redactShot({ cell: 4, outcome: 'sunk', hull: 'cruiser-1' }).hull).toBe('cruiser-1');
   });
 
   it('ends the moment the last hull goes down, with no reply', () => {
@@ -147,7 +167,7 @@ describe('firing', () => {
 });
 
 describe('scoring', () => {
-  /** Play a flawless campaign: 17 shots, 17 hits, nothing lost. */
+  /** Play a flawless campaign: one shot per enemy section, nothing lost. */
   function perfectGame() {
     let state = newGame(EARTH_FLEET, ALIEN_FLEET);
     for (const cell of allCellsOf(ALIEN_FLEET)) {
@@ -184,10 +204,12 @@ describe('scoring', () => {
 
   it('never goes negative', () => {
     let state = newGame(EARTH_FLEET, ALIEN_FLEET);
-    // Fire only into empty water, well past the perfect-game budget.
-    for (let cell = 60; cell < 90; cell += 1) {
+    // Fire only into empty space, well past the perfect-game budget: the
+    // invader is deployed in the lower half of its grid, the player in the upper
+    // half of its own.
+    for (let cell = 0; cell < 30; cell += 1) {
       state = fire(state, 'earth', cell).state;
-      state = fire(state, 'alien', cell - 60).state;
+      state = fire(state, 'alien', cell + 40).state;
     }
     expect(scoreFor(state, 'scout').total).toBeGreaterThanOrEqual(0);
   });

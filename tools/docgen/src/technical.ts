@@ -5,6 +5,7 @@ import {
   COLUMNS,
   COLUMN_LABELS,
   FLEET,
+  HULLS,
   PERFECT_SHOT_COUNT,
   RANKS,
   ROWS,
@@ -138,16 +139,28 @@ from one row to the next.
 function fleetModel(): string {
   const rows = FLEET.map(
     (ship) =>
-      `| \`${ship.id}\` | ${ship.sections} | ${ship.earthName} | ${ship.alienName} | ${candidatePlacements(ship.id).length} |`,
+      `| \`${ship.id}\` | ${ship.count} | ${ship.sections} | ${ship.earthName} | ${ship.alienName} | ${candidatePlacements(`${ship.id}-1`).length} |`,
   ).join('\n');
 
   return `## 5. Fleet and deployment
 
-| Class id | Sections | Earth name | Alien name | Legal positions on an empty grid |
-| --- | --- | --- | --- | --- |
+| Class id | Hulls | Sections each | Earth name | Alien name | Legal positions on an empty grid |
+| --- | --- | --- | --- | --- | --- |
 ${rows}
 
-Total ${TOTAL_SECTIONS} sections per side. A placement is \`{ ship, origin, orientation }\` where
+A class may be deployed more than once, so the unit of play is the *hull*, not
+the class. Hull ids are \`\${classId}-\${ordinal}\`, one-based in deployment
+order:
+
+\`\`\`
+${HULLS.map((hull) => hull.id).join(', ')}
+\`\`\`
+
+A single-section hull has one legal position per cell rather than two: the two
+orientations are the same placement, and enumerating both would double its
+weight in the density map.
+
+Total ${HULLS.length} hulls, ${TOTAL_SECTIONS} sections per side. A placement is \`{ hull, origin, orientation }\` where
 \`origin\` is the westmost cell when horizontal and the northmost when vertical:
 
 \`\`\`
@@ -157,7 +170,7 @@ cells(placement) = [0 .. sections-1].map(i =>
 
 A whole deployment is legal when, and only when:
 
-1. every class appears exactly once;
+1. every hull appears exactly once;
 2. every hull fits inside the grid on its axis;
 3. no two hulls share a cell.
 
@@ -184,13 +197,14 @@ GameState {
   status: 'playing' | 'finished'
   winner?: 'earth' | 'alien'
 }
-Shot { cell, outcome: 'miss' | 'hit' | 'sunk', ship? }
+Shot { cell, outcome: 'miss' | 'hit' | 'sunk', hull? }
 \`\`\`
 
 Shots are recorded against the grid that was *fired at*, which is what makes a
-hull's damage a function of that grid alone: \`damage(ship) = count(shots where
-shot.ship == ship)\`, and a hull is destroyed when its damage reaches its
-section count.
+hull's damage a function of that grid alone: \`damage(hull) = count(shots where
+shot.hull == hull)\`, and a hull is destroyed when its damage reaches its
+section count. Damage is tracked per hull, not per class, so sinking one of the
+two cruisers says nothing about the other.
 
 Lifecycle:
 
@@ -223,12 +237,12 @@ fire(state, side, cell):
   reject if the defender's grid already has a shot at cell
 
   defender = other(side)
-  ship     = hull occupying cell on the defender's grid, if any
+  hull     = hull occupying cell on the defender's grid, if any
 
-  if no ship:            shot = { cell, 'miss' }
-  else if damage(ship) + 1 == sections(ship):
-                         shot = { cell, 'sunk', ship }
-  else:                  shot = { cell, 'hit',  ship }
+  if no hull:            shot = { cell, 'miss' }
+  else if damage(hull) + 1 == sections(hull):
+                         shot = { cell, 'sunk', hull }
+  else:                  shot = { cell, 'hit',  hull }
 
   append shot to the defender's grid
   if every defender hull is destroyed:
@@ -239,7 +253,7 @@ fire(state, side, cell):
 
 ### 6.2 Information redaction
 
-\`Shot.ship\` is recorded internally on every hit, because damage accounting
+\`Shot.hull\` is recorded internally on every hit, because damage accounting
 needs it, and stripped on the way out unless the outcome is \`sunk\`:
 
 \`\`\`
@@ -293,14 +307,19 @@ Career ranks are awarded on lifetime total: ${RANKS.map((rank) => `${rank.title}
 
 function aiModel(): string {
   const rows = DOCTRINE_LIST.map(
-    (doctrine) => `| \`${doctrine.id}\` | ${doctrine.name} | x${doctrine.scoreMultiplier} | ${doctrine.expectedShots} |`,
+    (doctrine) =>
+      `| \`${doctrine.id}\` | ${doctrine.name} | x${doctrine.scoreMultiplier} | ${doctrine.expectedShots} | ${doctrine.expectedHuntShots} |`,
   ).join('\n');
 
   return `## 8. The opponent
 
-| Id | Name | Score multiplier | Mean shots to clear a fleet (300 games) |
-| --- | --- | --- | --- |
+| Id | Name | Score multiplier | Mean shots to clear a fleet (300 games) | Mean shots to the last multi-section hull |
+| --- | --- | --- | --- | --- |
 ${rows}
+
+The second figure is the one to test against. Nothing can be inferred about a
+single-section hull, so hunting the four submarines is a uniform search that
+costs all three doctrines roughly the same and compresses the first figure.
 
 All three receive the same input — the redacted list of shots they have fired —
 and return one untried cell. No doctrine sees the defender's grid.
@@ -315,13 +334,13 @@ readIntel(shots):
       if miss: misses += cell; continue
       openHits += cell
       if outcome == 'sunk':
-          size = sections(shot.ship)
+          size = sections(shot.hull)
           claim the run of openHits through cell along one axis, length size
           move those cells from openHits to resolvedHits
-  remaining = classes not yet announced as sunk
+  remaining = hulls not yet announced as sunk
 \`\`\`
 
-A sinking announces the class but not the cells it occupied, so the run
+A sinking announces the hull but not the cells it occupied, so the run
 through the sinking cell is claimed for it. This is wrong only when two hulls
 were hit adjacently and in line, and the cost is one wasted probe.
 
@@ -347,8 +366,8 @@ first hit, and the step shrinks as hulls sink.
 **${DOCTRINE_LIST[2].name}** — exact placement density.
 
 \`\`\`
-for each surviving hull class:
-    for each legal placement of that class:
+for each surviving hull:
+    for each legal placement of that hull:
         skip if it covers a miss or a resolved hit
         weight = ${OPEN_HIT_WEIGHT} ^ (number of open hits it covers)
         add weight to every untried cell it covers
@@ -477,14 +496,15 @@ in the repository.
 3. A shot is refused out of turn, off the grid, or after the game ends.
 4. \`sunk\` is reported on, and only on, the shot that takes a hull's last
    section.
-5. The class of a struck hull is never disclosed before it sinks.
+5. The identity of a struck hull is never disclosed before it sinks.
 6. The game ends the instant a fleet loses its last hull, and the losing side
    does not reply.
 7. Any deployment that is incomplete, overlapping or off the grid is rejected,
    from client or server.
 8. A flawless campaign scores exactly \`maximumScore(difficulty)\`; the total is
    never negative.
-9. The doctrines are strictly ordered by mean shots to clear a fleet:
+9. The doctrines are strictly ordered by mean shots to destroy every
+   multi-section hull:
    ${DOCTRINE_LIST.map((doctrine) => doctrine.name).join(' > ')}.
 10. Every route Hono registers appears in \`API_ROUTES\`, and vice versa.
 

@@ -4,10 +4,10 @@ import {
   type Rng,
   type Shot,
   columnOf,
+  hullSections,
   neighbours,
   pick,
   rowOf,
-  shipClass,
 } from '@bs/rules';
 import { type Intel, readIntel } from './intel.js';
 import { densityMap } from './density.js';
@@ -31,14 +31,14 @@ export function chooseShot(shots: readonly Shot[], difficulty: Difficulty, rng: 
  *
  * The sweep uses parity: a hull of length `n` must cover a cell on every
  * `n`-th diagonal, so only those cells need probing to guarantee a first hit.
- * The step shrinks as hulls sink, ending at every cell once only the two-
- * section skiff is left.
+ * The step shrinks as hulls sink; with single-section submarines in the fleet
+ * it is 1 from the outset, so the sweep only sharpens once they are all found.
  */
 function huntAndTarget(intel: Intel, rng: Rng): Cell {
   const target = targetCandidates(intel);
   if (target.length > 0) return pick(rng, target);
 
-  const step = Math.min(...intel.remaining.map((ship) => shipClass(ship).sections));
+  const step = Math.min(...intel.remaining.map(hullSections));
   const parity = intel.untried.filter((cell) => (columnOf(cell) + rowOf(cell)) % step === 0);
   return pick(rng, parity.length > 0 ? parity : intel.untried);
 }

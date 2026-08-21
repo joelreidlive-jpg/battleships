@@ -1,13 +1,4 @@
-import {
-  ALL_CELLS,
-  type Cell,
-  FLEET,
-  type ShipClassId,
-  type Shot,
-  columnOf,
-  rowOf,
-  shipClass,
-} from '@bs/rules';
+import { ALL_CELLS, type Cell, HULLS, type HullId, type Shot, columnOf, hullSections, rowOf } from '@bs/rules';
 
 /**
  * What a shooter can deduce from its own shot history alone. This is the only
@@ -21,15 +12,15 @@ export interface Intel {
   readonly resolvedHits: ReadonlySet<Cell>;
   /** Hits on a hull still afloat — the cells worth chasing. */
   readonly openHits: readonly Cell[];
-  /** Hull classes not yet destroyed. */
-  readonly remaining: readonly ShipClassId[];
+  /** Hulls not yet destroyed. */
+  readonly remaining: readonly HullId[];
   readonly untried: readonly Cell[];
 }
 
 /**
  * Attribute each hit to a hull.
  *
- * A "sunk" announcement names the class, so its length is known, but not which
+ * A "sunk" announcement names the hull, so its length is known, but not which
  * cells it occupied. The standard inference is to claim the contiguous run of
  * open hits through the sinking cell along one axis; it is right except in the
  * rare case of two hulls hit adjacently and in line, where the only cost is
@@ -40,7 +31,7 @@ export function readIntel(shots: readonly Shot[]): Intel {
   const misses = new Set<Cell>();
   const resolvedHits = new Set<Cell>();
   const open = new Set<Cell>();
-  const sunk = new Set<ShipClassId>();
+  const sunk = new Set<HullId>();
 
   for (const shot of shots) {
     fired.add(shot.cell);
@@ -49,9 +40,9 @@ export function readIntel(shots: readonly Shot[]): Intel {
       continue;
     }
     open.add(shot.cell);
-    if (shot.outcome === 'sunk' && shot.ship) {
-      sunk.add(shot.ship);
-      for (const cell of claimHull(shot.cell, shipClass(shot.ship).sections, open)) {
+    if (shot.outcome === 'sunk' && shot.hull) {
+      sunk.add(shot.hull);
+      for (const cell of claimHull(shot.cell, hullSections(shot.hull), open)) {
         open.delete(cell);
         resolvedHits.add(cell);
       }
@@ -63,7 +54,7 @@ export function readIntel(shots: readonly Shot[]): Intel {
     misses,
     resolvedHits,
     openHits: [...open],
-    remaining: FLEET.map((ship) => ship.id).filter((id) => !sunk.has(id)),
+    remaining: HULLS.map((hull) => hull.id).filter((id) => !sunk.has(id)),
     untried: ALL_CELLS.filter((cell) => !fired.has(cell)),
   };
 }
@@ -93,6 +84,6 @@ function runThrough(cell: Cell, size: number, open: ReadonlySet<Cell>, axis: 'ho
 
 /** Sections of hulls still afloat that have not been hit yet. */
 export function sectionsOutstanding(intel: Intel): number {
-  const total = intel.remaining.reduce((sum, id) => sum + shipClass(id).sections, 0);
+  const total = intel.remaining.reduce((sum, id) => sum + hullSections(id), 0);
   return total - intel.openHits.length;
 }

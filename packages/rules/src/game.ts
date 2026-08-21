@@ -1,5 +1,5 @@
 import { type Cell, formatCell, isCell } from './grid.js';
-import { FLEET, type Side, type ShipClassId, shipClass } from './fleet.js';
+import { HULLS, type HullId, type Side, hullSections } from './fleet.js';
 import { type Placement, fleetCells, placementCells, validateFleet } from './placement.js';
 
 export type ShotOutcome = 'miss' | 'hit' | 'sunk';
@@ -9,7 +9,7 @@ export interface Shot {
   readonly cell: Cell;
   readonly outcome: ShotOutcome;
   /** The hull struck, on `hit` and `sunk`. Absent on a miss. */
-  readonly ship?: ShipClassId;
+  readonly hull?: HullId;
 }
 
 /** One side's grid: the hulls deployed on it and every shot fired at it. */
@@ -61,20 +61,20 @@ export function shotAt(grid: Grid, cell: Cell): Shot | undefined {
 }
 
 /** Hits recorded against one hull. */
-export function damageTo(grid: Grid, ship: ShipClassId): number {
-  return grid.shots.filter((shot) => shot.ship === ship).length;
+export function damageTo(grid: Grid, hull: HullId): number {
+  return grid.shots.filter((shot) => shot.hull === hull).length;
 }
 
-export function isSunk(grid: Grid, ship: ShipClassId): boolean {
-  return damageTo(grid, ship) >= shipClass(ship).sections;
+export function isSunk(grid: Grid, hull: HullId): boolean {
+  return damageTo(grid, hull) >= hullSections(hull);
 }
 
-export function sunkShips(grid: Grid): ShipClassId[] {
-  return grid.fleet.map((p) => p.ship).filter((ship) => isSunk(grid, ship));
+export function sunkHulls(grid: Grid): HullId[] {
+  return grid.fleet.map((placement) => placement.hull).filter((hull) => isSunk(grid, hull));
 }
 
 export function isFleetDestroyed(grid: Grid): boolean {
-  return grid.fleet.every((placement) => isSunk(grid, placement.ship));
+  return grid.fleet.every((placement) => isSunk(grid, placement.hull));
 }
 
 /** Cells of a hull that have not been hit. Only ever shown for your own fleet. */
@@ -103,12 +103,12 @@ export function fire(state: GameState, side: Side, cell: Cell): { state: GameSta
 
   const defender = opponent(side);
   const grid = gridOf(state, defender);
-  const ship = fleetCells(grid.fleet).get(cell);
+  const hull = fleetCells(grid.fleet).get(cell);
 
   let shot: Shot = { cell, outcome: 'miss' };
-  if (ship !== undefined) {
-    const wouldSink = damageTo(grid, ship) + 1 >= shipClass(ship).sections;
-    shot = { cell, outcome: wouldSink ? 'sunk' : 'hit', ship };
+  if (hull !== undefined) {
+    const wouldSink = damageTo(grid, hull) + 1 >= hullSections(hull);
+    shot = { cell, outcome: wouldSink ? 'sunk' : 'hit', hull };
   }
 
   const nextGrid: Grid = { fleet: grid.fleet, shots: [...grid.shots, shot] };
@@ -155,10 +155,10 @@ export function statsFor(state: GameState, side: Side): SideStats {
     hits,
     misses: shots - hits,
     accuracy: shots === 0 ? 0 : hits / shots,
-    sunk: sunkShips(target).length,
+    sunk: sunkHulls(target).length,
     sectionsRemaining: own.fleet.reduce((sum, placement) => sum + intactCells(own, placement).length, 0),
   };
 }
 
-/** Hull classes in the order they are deployed, for UI fleet rosters. */
-export const FLEET_ORDER: readonly ShipClassId[] = FLEET.map((ship) => ship.id);
+/** Hulls in the order they are deployed, for UI fleet rosters. */
+export const FLEET_ORDER: readonly HullId[] = HULLS.map((hull) => hull.id);
