@@ -11,6 +11,10 @@
   --orange: #d2601a;
   --amber: #e2a32d;
   --cream: #f2e8cf;
+  --bone: #e4d3ac;
+  --gold: #f2c14e;
+  --steel: #8fa3b0;
+  --steel-shadow: #4e6478;
   --teal: #2e6e6b;
   --danger: #b3231f;
 
@@ -211,9 +215,16 @@ button.primary {
 .grid {
   width: 100%;
   height: auto;
-  background: #241408;
+  background: radial-gradient(120% 110% at 50% 8%, #6b3212 0%, #35190a 55%, #1a0c05 100%);
   border: 3px solid var(--brown-light);
   border-radius: 10px;
+  box-shadow: inset 0 0 0 2px rgba(242, 193, 78, 0.22);
+}
+
+/* The invaders plot cold, so the two grids never read as the same territory. */
+.grid--alien {
+  background: radial-gradient(120% 100% at 50% 100%, #3a1a2c 0%, #1e1018 55%, #120a0c 100%);
+  border-color: #6b3a4e;
 }
 
 .axis {
@@ -225,9 +236,14 @@ button.primary {
 }
 
 .cell rect {
-  fill: #100a05;
-  stroke: var(--brown-light);
+  fill: rgba(242, 193, 78, 0.02);
+  stroke: #c4581c;
   stroke-width: 1;
+  opacity: 0.75;
+}
+
+.grid--alien .cell rect {
+  stroke: #7a3a52;
 }
 
 .cell--live rect {
@@ -236,6 +252,7 @@ button.primary {
 
 .cell--live:hover rect {
   fill: var(--teal);
+  opacity: 1;
 }
 
 .cell--miss rect {
@@ -247,12 +264,16 @@ button.primary {
   fill: var(--rust);
 }
 
-.cell--ghost rect {
+/* Both ghost rules outrank the hover fill, so an illegal placement always
+   reads red even under the pointer. */
+.cell--ghost.cell--ghost rect {
   fill: var(--teal);
+  opacity: 1;
 }
 
-.cell--ghost-bad rect {
+.cell--ghost-bad.cell--ghost-bad rect {
   fill: var(--danger);
+  opacity: 1;
 }
 
 .mark-miss {
@@ -279,64 +300,115 @@ button.primary {
   pointer-events: none;
 }
 
-.ship__body {
-  fill: var(--brown);
-  stroke: var(--amber);
+/* Earth flies bone-and-steel liners in a rust livery. */
+.ship__skin,
+.ship__skin-disc {
+  fill: var(--bone);
+}
+
+.ship__belly,
+.ship__belly-disc {
+  fill: var(--steel);
+  opacity: 0.6;
+}
+
+.ship__belly-disc {
+  opacity: 1;
+}
+
+.ship__band {
+  fill: #a8321e;
+}
+
+.ship__band2 {
+  fill: var(--orange);
+}
+
+.ship__chevron {
+  fill: var(--gold);
+}
+
+.ship__outline {
+  fill: none;
+  stroke: #2e1206;
   stroke-width: 2;
   stroke-linejoin: round;
 }
 
-.ship__wing {
-  fill: var(--rust);
-  stroke: var(--amber);
+.ship__deck {
+  fill: var(--steel-shadow);
+  stroke: #2e1206;
   stroke-width: 1.5;
-  stroke-linejoin: round;
-}
-
-.ship__glass {
-  fill: var(--teal);
-  stroke: var(--cream);
-  stroke-width: 1;
 }
 
 .ship__engine {
   fill: var(--gold);
 }
 
-.ship__rib {
-  stroke: var(--amber);
-  stroke-width: 1;
-  opacity: 0.45;
+.ship__fin {
+  fill: #a8321e;
+  stroke: #2e1206;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
 }
 
-/* The invasion fleet, shown once the battle is over, reads cold against the
-   defenders' orange. */
-.ship--alien .ship__body {
-  fill: #23383a;
-  stroke: var(--teal);
+/* The invasion fleet, revealed once the battle is over, reads cold and dark
+   against the defenders' warm hulls. */
+.ship--alien .ship__skin,
+.ship--alien .ship__skin-disc {
+  fill: #2a3134;
 }
 
-.ship--alien .ship__wing {
-  fill: #16292b;
-  stroke: var(--teal);
+.ship--alien .ship__crown {
+  fill: #4a5457;
+  opacity: 0.55;
 }
 
-.ship--alien .ship__glass {
+.ship--alien .ship__panel {
+  fill: var(--teal);
+}
+
+.ship--alien .ship__chevron {
   fill: var(--gold);
-  stroke: var(--cream);
 }
 
+.ship--alien .ship__outline {
+  stroke: #0b1113;
+  stroke-width: 2;
+}
+
+.ship--alien .ship__engine {
+  fill: #ff5a3c;
+}
+
+/* A destroyed hull is drawn as a burnt-out wreck rather than faded away, so
+   the reveal at the end of a campaign is still legible. */
 .ship--sunk {
-  opacity: 0.45;
+  opacity: 0.85;
 }
 
-.ship--sunk .ship__body {
-  fill: #2a1408;
-  stroke: var(--danger);
+.ship--sunk .ship__skin,
+.ship--sunk .ship__skin-disc {
+  fill: #6b5a44;
 }
 
+.ship--sunk .ship__belly,
+.ship--sunk .ship__belly-disc,
+.ship--sunk .ship__crown {
+  fill: #3a2a20;
+}
+
+.ship--sunk .ship__band,
+.ship--sunk .ship__band2,
+.ship--sunk .ship__panel,
+.ship--sunk .ship__chevron,
 .ship--sunk .ship__engine {
   fill: var(--danger);
+}
+
+.ship--sunk .ship__outline {
+  stroke: #1a0c05;
+  stroke-dasharray: 7 4;
 }
 
 .grid--locked .cell rect {

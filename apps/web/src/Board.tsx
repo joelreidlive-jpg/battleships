@@ -61,7 +61,7 @@ export function Board({
       </header>
       <svg
         viewBox={`0 0 ${width} ${height}`}
-        className={`grid ${disabled ? 'grid--locked' : ''}`}
+        className={['grid', `grid--${side}`, disabled ? 'grid--locked' : ''].filter(Boolean).join(' ')}
         role="grid"
         aria-label={title}
         onMouseLeave={() => onHover?.(null)}
