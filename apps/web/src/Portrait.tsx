@@ -1,44 +1,57 @@
-import type { Side } from '@bs/rules';
-
 export type Reaction = 'none' | 'cheer' | 'laugh';
 
 /**
- * Who is shooting, painted. The portrait follows the turn — your captain while
- * the guns are yours, the Kraal warlord while the invader answers — and takes
- * the win: a raised fist when you gut one of theirs, a laugh when they gut one
- * of yours.
+ * A commander's post, one above each grid: your captain over the Home Grid,
+ * the Kraal warlord over the Invasion Grid. Each stays where it is for the
+ * whole battle — only the expression moves. `active` is whose turn it is, and
+ * `reaction` is the moment a hull dies: a raised fist over there, a laugh over
+ * here.
  */
 export function Portrait({
-  turn,
+  who,
+  name,
+  active,
   reaction,
-  captain,
 }: {
-  readonly turn: Side;
+  readonly who: 'captain' | 'kraal';
+  readonly name: string;
+  readonly active: boolean;
   readonly reaction: Reaction;
-  readonly captain: string;
 }) {
-  const alien = turn === 'alien' || reaction === 'laugh';
-  const cheering = !alien && reaction === 'cheer';
+  const alien = who === 'kraal';
+  const reacting = reaction === (alien ? 'laugh' : 'cheer');
   const source = alien
-    ? reaction === 'laugh'
+    ? reacting
       ? '/art/kraal-laugh.webp'
       : '/art/kraal-idle.webp'
-    : cheering
+    : reacting
       ? '/art/captain-cheer.webp'
       : '/art/captain-idle.webp';
-  const who = alien ? 'The Kraal Overlord' : `Captain ${captain}`;
   const mood = alien
-    ? reaction === 'laugh'
+    ? reacting
       ? 'laughing as one of your hulls burns'
-      : 'taking aim at your fleet'
-    : cheering
+      : active
+        ? 'taking aim at your fleet'
+        : 'watching the void'
+    : reacting
       ? 'punching the air over a broken invader'
-      : 'awaiting your order';
+      : active
+        ? 'awaiting your order'
+        : 'braced for the reply';
 
   return (
-    <figure className={`portrait${alien ? ' portrait--alien' : ''}${reaction === 'none' ? '' : ' portrait--react'}`}>
-      <img src={source} alt={`${who}, ${mood}`} width={512} height={512} />
-      <figcaption>{who}</figcaption>
+    <figure
+      className={[
+        'portrait',
+        alien ? 'portrait--alien' : '',
+        active ? 'portrait--turn' : '',
+        reacting ? 'portrait--react' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <img src={source} alt={`${name}, ${mood}`} width={512} height={512} />
+      <figcaption>{name}</figcaption>
     </figure>
   );
 }

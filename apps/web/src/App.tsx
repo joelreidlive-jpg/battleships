@@ -179,7 +179,6 @@ export function App() {
         <Battle
           match={match}
           busy={busy}
-          starfleet={commission.starfleet}
           captain={commission.captain}
           reaction={reaction}
           onFire={(cell) => run(() => api.fire(match.matchId, cell))}
@@ -217,7 +216,6 @@ export function App() {
 interface BattleProps {
   readonly match: MatchView;
   readonly busy: boolean;
-  readonly starfleet: string;
   readonly captain: string;
   readonly reaction: Reaction;
   readonly onFire: (cell: number) => void;
@@ -225,20 +223,12 @@ interface BattleProps {
   readonly onNewCampaign: () => void;
 }
 
-function Battle({ match, busy, starfleet, captain, reaction, onFire, onResign, onNewCampaign }: BattleProps) {
+function Battle({ match, busy, captain, reaction, onFire, onResign, onNewCampaign }: BattleProps) {
   const finished = match.status === 'finished';
   const won = match.winner === 'earth';
 
   return (
     <>
-      <section className="statusbar">
-        <Stat label="Score" value={match.score.total.toLocaleString()} />
-        <Stat label="Shots" value={String(match.stats.earth.shots)} />
-        <Stat label="Accuracy" value={`${Math.round(match.stats.earth.accuracy * 100)}%`} />
-        <Stat label="Invader hulls" value={`${HULLS.length - match.offence.sunk.length} afloat`} />
-        <Stat label="Your hulls" value={`${HULLS.length - match.defence.sunk.length} afloat`} />
-      </section>
-
       {finished ? (
         <section className={won ? 'verdict verdict--win' : 'verdict verdict--loss'}>
           <h2>{won ? 'The invasion is broken' : 'Earth has fallen'}</h2>
@@ -249,13 +239,17 @@ function Battle({ match, busy, starfleet, captain, reaction, onFire, onResign, o
         </section>
       ) : null}
 
-      <div className="portrait-row">
-        <Portrait turn={match.turn} reaction={reaction} captain={captain} />
-      </div>
-
       <div className="boards">
         <Board
           title="Invasion Grid"
+          portrait={
+            <Portrait
+              who="kraal"
+              name="Kraal Overlord"
+              active={match.turn === 'alien'}
+              reaction={reaction}
+            />
+          }
           subtitle={finished ? 'Invader deployment revealed.' : 'Choose a cell to fire on.'}
           shots={match.offence.shots}
           {...(match.alienFleet ? { fleet: match.alienFleet } : {})}
@@ -265,14 +259,30 @@ function Battle({ match, busy, starfleet, captain, reaction, onFire, onResign, o
           sunk={match.offence.sunk}
         />
         <Board
-          title={`Home Grid — ${starfleet} Starfleet`}
+          title="Home Grid — Starfleet"
           subtitle={`Sections intact: ${match.stats.earth.sectionsRemaining}/${TOTAL_SECTIONS}`}
+          portrait={
+            <Portrait
+              who="captain"
+              name={`Capt. ${captain}`}
+              active={match.turn === 'earth'}
+              reaction={reaction}
+            />
+          }
           shots={match.defence.shots}
           fleet={match.defence.fleet}
           disabled
           sunk={match.defence.sunk}
         />
       </div>
+
+      <section className="statusbar">
+        <Stat label="Score" value={match.score.total.toLocaleString()} />
+        <Stat label="Shots" value={String(match.stats.earth.shots)} />
+        <Stat label="Accuracy" value={`${Math.round(match.stats.earth.accuracy * 100)}%`} />
+        <Stat label="Invader hulls" value={`${HULLS.length - match.offence.sunk.length} afloat`} />
+        <Stat label="Your hulls" value={`${HULLS.length - match.defence.sunk.length} afloat`} />
+      </section>
 
       <section className="log">
         <h2>Transmission log</h2>

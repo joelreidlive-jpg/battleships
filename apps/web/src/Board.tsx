@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import {
   type Cell,
   COLUMNS,
@@ -34,6 +34,8 @@ export interface BoardProps {
   /** Whose craft these are, which is what they are drawn as. */
   readonly side?: Side;
   readonly sunk?: readonly HullId[];
+  /** Whoever commands this grid, drawn in its top-right corner. */
+  readonly portrait?: ReactNode;
 }
 
 export function Board({
@@ -47,6 +49,7 @@ export function Board({
   onHover,
   side = 'earth',
   sunk = [],
+  portrait,
 }: BoardProps) {
   const byCell = useMemo(() => new Map(shots.map((shot) => [shot.cell, shot])), [shots]);
   const ghostCells = useMemo(() => new Set(ghost?.cells ?? []), [ghost]);
@@ -56,8 +59,11 @@ export function Board({
   return (
     <section className="board">
       <header>
-        <h2>{title}</h2>
-        {subtitle ? <p>{subtitle}</p> : null}
+        <div>
+          <h2>{title}</h2>
+          {subtitle ? <p>{subtitle}</p> : null}
+        </div>
+        {portrait}
       </header>
       <svg
         viewBox={`0 0 ${width} ${height}`}
