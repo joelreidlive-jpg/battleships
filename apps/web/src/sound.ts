@@ -11,6 +11,8 @@ const MUTE_KEY = 'bs.muted';
 
 let context: AudioContext | null = null;
 let voices: SpeechSynthesisVoice[] = [];
+/** Where the rotation of hit callouts has got to, so a run of hits never repeats one. */
+let nextCallout = 0;
 
 export function muted(): boolean {
   return localStorage.getItem(MUTE_KEY) === '1';
@@ -128,17 +130,54 @@ function fire(gain: number, callout: () => void, afterMs: number): void {
   else play();
 }
 
-/** The player landed a shot: a bright blast and an excited British callout. */
+/**
+ * The bridge crew calling a hit. Consecutive hits step through the list rather
+ * than repeating one line, so a long run of them still sounds like a crew.
+ * Each has a pre-rendered clip for browsers with no British voice installed.
+ */
+const HIT_CALLOUTS: readonly { readonly line: string; readonly pitch: number; readonly clip: string }[] = [
+  { line: 'Direct hit!', pitch: 1.6, clip: 'direct-hit.mp3' },
+  { line: 'Target hit, Captain!', pitch: 1.3, clip: 'hit-2.mp3' },
+  { line: "That's a hit! Good shooting!", pitch: 1.75, clip: 'hit-3.mp3' },
+  { line: 'Solid hit on the invader!', pitch: 1.1, clip: 'hit-4.mp3' },
+];
+
+/** The player landed a shot: a bright blast and the next voice in the rotation. */
 export function playDirectHit(afterMs = 0): void {
+  const callout = HIT_CALLOUTS[nextCallout % HIT_CALLOUTS.length];
+  nextCallout += 1;
   fire(
     0.5,
     () => {
       const voice = britishVoice();
-      if (voice) say('Direct hit!', 1.25, 1.6, voice);
-      else playClip('direct-hit.mp3', 0.9);
+      if (voice) say(callout.line, 1.25, callout.pitch, voice);
+      else playClip(callout.clip, 0.9);
     },
     afterMs,
   );
+}
+
+/** A fresh campaign starts the rotation again, so the first hit is always "Direct hit!". */
+export function resetCallouts(): void {
+  nextCallout = 0;
+}
+
+/** The player destroyed an invader hull: the Kraal are unimpressed. */
+export function playAlienHullLost(afterMs = 0): void {
+  fire(0.6, () => playClip('kraal-have-many.mp3', 1), afterMs);
+}
+
+/** The player lost a hull: the crew take it, and keep going. */
+export function playOwnHullLost(afterMs = 0): void {
+  fire(0.7, () => playClip('ship-lost.mp3', 1), afterMs);
+}
+
+/** One hull left. No blast — this rides on the one that just sank a ship. */
+export function playLastHullWarning(afterMs = 0): void {
+  if (muted()) return;
+  window.setTimeout(() => {
+    if (!muted()) playClip('last-ship.mp3', 1);
+  }, afterMs);
 }
 
 /** The invader landed a shot: a heavier blast and a slow, guttural threat. */

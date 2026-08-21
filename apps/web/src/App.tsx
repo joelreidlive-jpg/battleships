@@ -39,14 +39,36 @@ export function App() {
   useEffect(refreshCareer, [refreshCareer]);
   useEffect(() => sound.primeVoices(), []);
 
-  /** One bang per side per exchange, sequenced so the two callouts never overlap. */
+  /**
+   * One bang per side per exchange, plus the heavier callout when a hull dies
+   * and the warning when only one of ours is left. They are queued end to end
+   * from the length of each clip, so two voices never talk over each other.
+   */
   const announce = (view: MatchView) => {
     const fresh = view.log.filter((entry) => entry.seq > heard.current);
     heard.current = view.log.reduce((max, entry) => Math.max(max, entry.seq), heard.current);
-    const landed = (side: Side) =>
-      fresh.some((entry) => entry.side === side && (entry.outcome === 'hit' || entry.outcome === 'sunk'));
-    if (landed('earth')) sound.playDirectHit();
-    if (landed('alien')) sound.playIncomingHit(landed('earth') ? 2200 : 0);
+    const outcome = (side: Side) => {
+      const entries = fresh.filter((entry) => entry.side === side);
+      if (entries.some((entry) => entry.outcome === 'sunk')) return 'sunk';
+      return entries.some((entry) => entry.outcome === 'hit') ? 'hit' : 'none';
+    };
+
+    let at = 0;
+    const queue = (play: (afterMs: number) => void, lengthMs: number) => {
+      play(at);
+      at += lengthMs;
+    };
+
+    const earth = outcome('earth');
+    if (earth === 'sunk') queue(sound.playAlienHullLost, 5200);
+    else if (earth === 'hit') queue(sound.playDirectHit, 3000);
+
+    const alien = outcome('alien');
+    if (alien === 'sunk') queue(sound.playOwnHullLost, 5100);
+    else if (alien === 'hit') queue(sound.playIncomingHit, 3400);
+
+    const afloat = HULLS.length - view.defence.sunk.length;
+    if (alien === 'sunk' && afloat === 1 && view.status === 'playing') queue(sound.playLastHullWarning, 3400);
   };
 
   const run = async (action: () => Promise<MatchView>) => {
@@ -70,6 +92,7 @@ export function App() {
   const launch = (fleet: readonly Placement[] | undefined) => {
     if (commission === null) return Promise.resolve();
     heard.current = 0;
+    sound.resetCallouts();
     setFlypast(null);
     return run(() => api.createMatch(commission.doctrine, fleet));
   };
