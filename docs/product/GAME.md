@@ -127,7 +127,7 @@ shot, while the invader lands three hits on your Solar Battleship:
 | Line | Score |
 | --- | --- |
 | Hits | 2,000 |
-| Hulls destroyed | 1,200 |
+| Ships destroyed | 1,200 |
 | Accuracy bonus | 1,000 |
 | Fleet preserved | 3,400 |
 | Victory | 1,000 |

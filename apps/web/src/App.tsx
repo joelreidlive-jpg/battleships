@@ -275,8 +275,8 @@ function Battle({ match, busy, captain, reaction, onFire, onResign, onNewCampaig
         <Stat label="Score" value={match.score.total.toLocaleString()} />
         <Stat label="Shots" value={String(match.stats.earth.shots)} />
         <Stat label="Accuracy" value={`${Math.round(match.stats.earth.accuracy * 100)}%`} />
-        <Stat label="Invader hulls" value={`${HULLS.length - match.offence.sunk.length} afloat`} />
-        <Stat label="Your hulls" value={`${HULLS.length - match.defence.sunk.length} afloat`} />
+        <Stat label="Invader ships" value={`${HULLS.length - match.offence.sunk.length} afloat`} />
+        <Stat label="Your ships" value={`${HULLS.length - match.defence.sunk.length} afloat`} />
       </section>
 
       <section className="log">
@@ -315,7 +315,7 @@ function ScoreTable({ match }: { match: MatchView }) {
   const { score } = match;
   const lines: [string, number][] = [
     ['Hits', score.hits],
-    ['Hulls destroyed', score.sinks],
+    ['Ships destroyed', score.sinks],
     ['Accuracy bonus', score.accuracy],
     ['Fleet preserved', score.survival],
     ['Victory', score.victory],

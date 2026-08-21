@@ -213,7 +213,7 @@ shot, while the invader lands three hits on your ${FLEET[0].earthName}:
 | Line | Score |
 | --- | --- |
 | Hits | ${score.hits.toLocaleString('en-GB')} |
-| Hulls destroyed | ${score.sinks.toLocaleString('en-GB')} |
+| Ships destroyed | ${score.sinks.toLocaleString('en-GB')} |
 | Accuracy bonus | ${score.accuracy.toLocaleString('en-GB')} |
 | Fleet preserved | ${score.survival.toLocaleString('en-GB')} |
 | Victory | ${score.victory.toLocaleString('en-GB')} |
