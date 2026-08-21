@@ -61,6 +61,11 @@ so the game can be rebuilt from it if the source is lost. Where a rule is a
 choice rather than a consequence, the reason is given, because a
 reimplementation needs to know which parts are load-bearing.
 
+Deliberately absent, so nobody plans around them: human-versus-human play (the
+invader submits shots through the same code path a second player would, but no
+transport or matchmaking exists), accounts, and any global leaderboard — the
+career record is per browser.
+
 `;
 }
 

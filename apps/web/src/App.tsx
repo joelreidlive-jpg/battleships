@@ -4,13 +4,17 @@ import {
   type Difficulty,
   HULLS,
   type Placement,
+  STRAPLINE,
   type Side,
   TOTAL_SECTIONS,
   formatCell,
 } from '@bs/rules';
 import type { MatchView, ProgressResponse } from '@bs/protocol';
 import { Board } from './Board.js';
+import { Briefing } from './Briefing.js';
+import { type Commission, saveCommission, storedCommission } from './commission.js';
 import { Deploy } from './Deploy.js';
+import { Flypast } from './Flypast.js';
 import { Manual } from './Manual.js';
 import * as api from './api.js';
 import * as sound from './sound.js';
@@ -28,7 +32,10 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [manual, setManual] = useState(false);
+  const [commission, setCommission] = useState<Commission | null>(storedCommission);
   const [mute, setMute] = useState(sound.muted);
+  /** Set when a campaign ends, cleared once the flypast has run. */
+  const [flypast, setFlypast] = useState<boolean | null>(null);
   /** Log entries already sounded, so a re-render never replays an explosion. */
   const heard = useRef(0);
 
@@ -57,7 +64,10 @@ export function App() {
       const view = await action();
       setMatch(view);
       announce(view);
-      if (view.status === 'finished') refreshCareer();
+      if (view.status === 'finished') {
+        refreshCareer();
+        setFlypast(view.winner === 'earth');
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'the transmission failed');
     } finally {
@@ -67,6 +77,7 @@ export function App() {
 
   const launch = (fleet: readonly Placement[] | undefined) => {
     heard.current = 0;
+    setFlypast(null);
     return run(() => api.createMatch(difficulty, fleet));
   };
 
@@ -82,7 +93,11 @@ export function App() {
       <header className="masthead">
         <div>
           <h1>Orbital Battleships Command</h1>
-          <p>Earth stands alone. Find their fleet before they find yours.</p>
+          <p>
+            {commission
+              ? `Captain ${commission.captain} · ${commission.starfleet} Starfleet`
+              : STRAPLINE}
+          </p>
         </div>
         <div className="masthead__right">
           {career ? (
@@ -102,7 +117,14 @@ export function App() {
 
       {error ? <p className="alert">{error}</p> : null}
 
-      {match === null ? (
+      {commission === null ? (
+        <Briefing
+          onCommission={(signed) => {
+            saveCommission(signed);
+            setCommission(signed);
+          }}
+        />
+      ) : match === null ? (
         <>
           <section className="briefing">
             <h2>Select invasion doctrine</h2>
@@ -120,17 +142,20 @@ export function App() {
               ))}
             </div>
           </section>
-          <Deploy onLaunch={launch} busy={busy} />
+          <Deploy onLaunch={launch} busy={busy} starfleet={commission.starfleet} />
         </>
       ) : (
         <Battle
           match={match}
           busy={busy}
+          starfleet={commission.starfleet}
           onFire={(cell) => run(() => api.fire(match.matchId, cell))}
           onResign={() => run(() => api.resign(match.matchId))}
           onNewCampaign={() => setMatch(null)}
         />
       )}
+
+      {flypast === null ? null : <Flypast won={flypast} onDone={() => setFlypast(null)} />}
 
       {manual ? <Manual onClose={() => setManual(false)} /> : null}
     </div>
@@ -140,12 +165,13 @@ export function App() {
 interface BattleProps {
   readonly match: MatchView;
   readonly busy: boolean;
+  readonly starfleet: string;
   readonly onFire: (cell: number) => void;
   readonly onResign: () => void;
   readonly onNewCampaign: () => void;
 }
 
-function Battle({ match, busy, onFire, onResign, onNewCampaign }: BattleProps) {
+function Battle({ match, busy, starfleet, onFire, onResign, onNewCampaign }: BattleProps) {
   const finished = match.status === 'finished';
   const won = match.winner === 'earth';
 
@@ -181,7 +207,7 @@ function Battle({ match, busy, onFire, onResign, onNewCampaign }: BattleProps) {
           sunk={match.offence.sunk}
         />
         <Board
-          title="Home Grid"
+          title={`Home Grid — ${starfleet} Starfleet`}
           subtitle={`Sections intact: ${match.stats.earth.sectionsRemaining}/${TOTAL_SECTIONS}`}
           shots={match.defence.shots}
           fleet={match.defence.fleet}

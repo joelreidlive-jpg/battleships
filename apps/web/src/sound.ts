@@ -145,3 +145,13 @@ export function playDirectHit(afterMs = 0): void {
 export function playIncomingHit(afterMs = 0): void {
   fire(0.65, () => playClip('we-will-destroy-you.mp3', 1), afterMs);
 }
+
+/** Earth holds: the flight deck erupts as the fleet goes past. */
+export function playCheer(): void {
+  if (!muted()) playClip('crowd-hooray.mp3', 1);
+}
+
+/** Earth falls: the invader enjoys it. */
+export function playAlienLaugh(): void {
+  if (!muted()) playClip('alien-laugh.mp3', 1);
+}

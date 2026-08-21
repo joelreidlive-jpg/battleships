@@ -6,3 +6,4 @@ export * from './difficulty.js';
 export * from './scoring.js';
 export * from './ranks.js';
 export * from './rng.js';
+export * from './lore.js';
