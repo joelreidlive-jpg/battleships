@@ -224,9 +224,10 @@ function difficulty(): string {
   ).join('\n');
   return `## Invasion doctrines
 
-Choose how the invader fights before you launch. Nothing else changes: the
-grid, the fleets and the scoring are identical whichever you pick, so the
-harder the invader, the more your score is multiplied.
+You choose how the invader fights when you sign your commission, and it holds
+for every campaign you fly under it. Nothing else changes: the grid, the fleets
+and the scoring are identical whichever you pick, so the harder the invader,
+the more your score is multiplied.
 
 | Doctrine | Score multiplier | Shots it needs to hunt down your bigger hulls | How it comes at you |
 | --- | --- | --- | --- |

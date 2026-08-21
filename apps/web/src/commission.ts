@@ -1,16 +1,20 @@
 /**
- * Who the player is: the captain's name and the starfleet they command.
+ * Who the player is: the captain's name, the starfleet they command and the
+ * invasion doctrine they chose to face.
  *
- * It is asked for once, at the briefing, and kept in this browser. The server
- * neither knows nor needs it — it is fiction printed over the top of a match,
- * so nothing about scoring or the campaign depends on it.
+ * It is asked for once, at the briefing, and kept in this browser. The names
+ * are fiction printed over the top of a match; the doctrine is not — it is the
+ * difficulty every campaign this captain launches will be created with.
  */
+
+import { type Difficulty, isDifficulty } from '@bs/rules';
 
 const KEY = 'bs.commission';
 
 export interface Commission {
   readonly captain: string;
   readonly starfleet: string;
+  readonly doctrine: Difficulty;
 }
 
 export function storedCommission(): Commission | null {
@@ -19,10 +23,11 @@ export function storedCommission(): Commission | null {
   try {
     const value: unknown = JSON.parse(raw);
     if (typeof value !== 'object' || value === null) return null;
-    const { captain, starfleet } = value as Partial<Commission>;
+    const { captain, starfleet, doctrine } = value as Partial<Commission>;
     if (typeof captain !== 'string' || typeof starfleet !== 'string') return null;
     if (captain.trim() === '' || starfleet.trim() === '') return null;
-    return { captain, starfleet };
+    if (!isDifficulty(doctrine)) return null;
+    return { captain, starfleet, doctrine };
   } catch {
     return null;
   }

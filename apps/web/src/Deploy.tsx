@@ -13,6 +13,7 @@ import {
   validateFleet,
 } from '@bs/rules';
 import { Board } from './Board.js';
+import { Ship } from './Ship.js';
 
 export interface DeployProps {
   readonly onLaunch: (fleet: readonly Placement[] | undefined) => void;
@@ -70,9 +71,9 @@ export function Deploy({ onLaunch, busy, starfleet }: DeployProps) {
                   .filter(Boolean)
                   .join(' ')}
               >
-                <span className="roster__name">{hullName(hull.id, 'earth')}</span>
+                <RosterShip hull={hull.id} />
+                <span className="roster__tag">{shipClass(hull.ship).tagline}</span>
                 <span className="roster__pips">{'\u25A0'.repeat(hullSections(hull.id))}</span>
-                <span className="roster__blurb">{shipClass(hull.ship).blurb}</span>
               </li>
             );
           })}
@@ -97,5 +98,22 @@ export function Deploy({ onLaunch, busy, starfleet }: DeployProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+/** The hull itself, drawn at roster scale, in place of its name. */
+function RosterShip({ hull }: { readonly hull: HullId }) {
+  const cell = 34;
+  const width = hullSections(hull) * cell + 12;
+  return (
+    <svg
+      className="roster__ship"
+      viewBox={`${-width / 2} ${-cell / 2} ${width} ${cell}`}
+      style={{ width: `${width}px` }}
+      role="img"
+      aria-label={hullName(hull, 'earth')}
+    >
+      <Ship hull={hull} orientation="horizontal" cx={0} cy={0} cell={cell} side="earth" />
+    </svg>
   );
 }

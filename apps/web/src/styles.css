@@ -425,9 +425,10 @@ button.primary {
 
 .roster__item {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 10px;
-  padding: 8px 10px;
+  grid-template-columns: 152px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 10px;
   border-left: 5px solid var(--orange);
   background: rgba(74, 37, 17, 0.55);
   border-radius: 4px;
@@ -443,12 +444,16 @@ button.primary {
   box-shadow: inset 0 0 0 1px var(--gold);
 }
 
-.roster__name {
-  font-family: var(--display);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  color: var(--amber);
+.roster__ship {
+  height: 30px;
+  overflow: visible;
+  justify-self: start;
+}
+
+.roster__tag {
+  font-size: 0.82rem;
+  color: var(--cream);
+  opacity: 0.85;
 }
 
 .roster__pips {
@@ -456,12 +461,6 @@ button.primary {
   letter-spacing: 3px;
 }
 
-.roster__blurb {
-  grid-column: 1 / -1;
-  font-size: 0.85rem;
-  color: var(--cream);
-  opacity: 0.85;
-}
 
 .statusbar {
   display: grid;
@@ -812,6 +811,11 @@ button.primary {
   margin: 14px 0 0;
   color: var(--gold);
   font-style: italic;
+}
+
+.brief__seal--waiting {
+  color: var(--cream);
+  opacity: 0.65;
 }
 
 /* Curtain call: a hull crosses the screen and leaves the verdict behind it. */
