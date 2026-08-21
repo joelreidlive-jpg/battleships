@@ -38,7 +38,7 @@
     {
       "binding": "DB",
       "database_name": "battleships",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "d6b611ac-53ee-4645-acd7-af946e4d27c5",
       "migrations_dir": "migrations"
     }
   ]
