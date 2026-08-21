@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  DIFFICULTIES,
-  type Difficulty,
   HULLS,
   type Placement,
   STRAPLINE,
@@ -14,19 +12,13 @@ import { Board } from './Board.js';
 import { Briefing } from './Briefing.js';
 import { type Commission, saveCommission, storedCommission } from './commission.js';
 import { Deploy } from './Deploy.js';
+import { DOCTRINE_LABEL } from './doctrine.js';
 import { Flypast } from './Flypast.js';
 import { Manual } from './Manual.js';
 import * as api from './api.js';
 import * as sound from './sound.js';
 
-const DIFFICULTY_LABEL: Record<Difficulty, { name: string; blurb: string }> = {
-  scout: { name: 'Scout Wave', blurb: 'Unco-ordinated probing fire. Score x1.' },
-  raider: { name: 'Raider Flight', blurb: 'Sweeps, then hunts what it finds. Score x1.5.' },
-  overmind: { name: 'Overmind', blurb: 'Reasons about every hull you could still have. Score x2.' },
-};
-
 export function App() {
-  const [difficulty, setDifficulty] = useState<Difficulty>('raider');
   const [match, setMatch] = useState<MatchView | null>(null);
   const [career, setCareer] = useState<ProgressResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -76,9 +68,10 @@ export function App() {
   };
 
   const launch = (fleet: readonly Placement[] | undefined) => {
+    if (commission === null) return Promise.resolve();
     heard.current = 0;
     setFlypast(null);
-    return run(() => api.createMatch(difficulty, fleet));
+    return run(() => api.createMatch(commission.doctrine, fleet));
   };
 
   const toggleMute = () => {
@@ -95,7 +88,7 @@ export function App() {
           <h1>Orbital Battleships Command</h1>
           <p>
             {commission
-              ? `Captain ${commission.captain} · ${commission.starfleet} Starfleet`
+              ? `Captain ${commission.captain} · ${commission.starfleet} Starfleet · ${DOCTRINE_LABEL[commission.doctrine].name}`
               : STRAPLINE}
           </p>
         </div>
@@ -125,25 +118,7 @@ export function App() {
           }}
         />
       ) : match === null ? (
-        <>
-          <section className="briefing">
-            <h2>Select invasion doctrine</h2>
-            <div className="doctrines">
-              {DIFFICULTIES.map((id) => (
-                <button
-                  key={id}
-                  type="button"
-                  className={id === difficulty ? 'doctrine doctrine--active' : 'doctrine'}
-                  onClick={() => setDifficulty(id)}
-                >
-                  <strong>{DIFFICULTY_LABEL[id].name}</strong>
-                  <span>{DIFFICULTY_LABEL[id].blurb}</span>
-                </button>
-              ))}
-            </div>
-          </section>
-          <Deploy onLaunch={launch} busy={busy} starfleet={commission.starfleet} />
-        </>
+        <Deploy onLaunch={launch} busy={busy} starfleet={commission.starfleet} />
       ) : (
         <Battle
           match={match}

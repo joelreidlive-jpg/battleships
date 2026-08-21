@@ -813,6 +813,11 @@ button.primary {
   font-style: italic;
 }
 
+.brief__seal--waiting {
+  color: var(--cream);
+  opacity: 0.65;
+}
+
 /* Curtain call: a hull crosses the screen and leaves the verdict behind it. */
 .flypast {
   position: fixed;

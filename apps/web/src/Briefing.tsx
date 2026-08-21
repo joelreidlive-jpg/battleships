@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { FLEET, HULLS, STARFLEET_NAMES, STORY, TOTAL_SECTIONS } from '@bs/rules';
+import { DIFFICULTIES, type Difficulty, FLEET, HULLS, STARFLEET_NAMES, STORY, TOTAL_SECTIONS } from '@bs/rules';
+import { DOCTRINE_LABEL } from './doctrine.js';
 import { Ship } from './Ship.js';
 import type { Commission } from './commission.js';
 
@@ -7,7 +8,9 @@ const CELL = 34;
 
 /**
  * The briefing a captain reads once, before their first campaign: who is
- * attacking, what they are given to fight it with, and who they are.
+ * attacking, what they are given to fight it with, who they are, and which
+ * invasion doctrine they will face. The doctrine is chosen here because it is
+ * fixed for the commission, and no campaign can be launched without it.
  *
  * The roster is drawn from `FLEET`, artwork included, so a change to the fleet
  * shows up here without anyone remembering to update a screen.
@@ -16,7 +19,8 @@ export function Briefing({ onCommission }: { onCommission: (commission: Commissi
   const [captain, setCaptain] = useState('');
   const [suggestion, setSuggestion] = useState(0);
   const [starfleet, setStarfleet] = useState(STARFLEET_NAMES[0]);
-  const ready = captain.trim() !== '' && starfleet.trim() !== '';
+  const [doctrine, setDoctrine] = useState<Difficulty | null>(null);
+  const ready = captain.trim() !== '' && starfleet.trim() !== '' && doctrine !== null;
 
   const nextSuggestion = () => {
     const index = (suggestion + 1) % STARFLEET_NAMES.length;
@@ -62,12 +66,34 @@ export function Briefing({ onCommission }: { onCommission: (commission: Commissi
         ))}
       </ul>
 
+      <h3>Choose your invasion doctrine</h3>
+      <p className="brief__note">
+        How the Kraal will fight you, and what a victory is worth. It is fixed for your commission, so choose
+        before you sign.
+      </p>
+      <div className="doctrines">
+        {DIFFICULTIES.map((id) => (
+          <button
+            key={id}
+            type="button"
+            className={id === doctrine ? 'doctrine doctrine--active' : 'doctrine'}
+            aria-pressed={id === doctrine}
+            onClick={() => setDoctrine(id)}
+          >
+            <strong>{DOCTRINE_LABEL[id].name}</strong>
+            <span>{DOCTRINE_LABEL[id].blurb}</span>
+          </button>
+        ))}
+      </div>
+
       <h3>Sign your commission</h3>
       <form
         className="brief__form"
         onSubmit={(event) => {
           event.preventDefault();
-          if (ready) onCommission({ captain: captain.trim(), starfleet: starfleet.trim() });
+          if (ready && doctrine !== null) {
+            onCommission({ captain: captain.trim(), starfleet: starfleet.trim(), doctrine });
+          }
         }}
       >
         <label>
@@ -96,11 +122,16 @@ export function Briefing({ onCommission }: { onCommission: (commission: Commissi
           Take command
         </button>
       </form>
-      {ready ? (
+      {ready && doctrine !== null ? (
         <p className="brief__seal">
-          Captain {captain.trim()}, {starfleet.trim()} Starfleet — Earth is yours to hold.
+          Captain {captain.trim()}, {starfleet.trim()} Starfleet — the {DOCTRINE_LABEL[doctrine].name} is
+          inbound, and Earth is yours to hold.
         </p>
-      ) : null}
+      ) : (
+        <p className="brief__seal brief__seal--waiting">
+          {doctrine === null ? 'Select a doctrine to take command.' : 'Name your captain and starfleet to take command.'}
+        </p>
+      )}
     </section>
   );
 }
