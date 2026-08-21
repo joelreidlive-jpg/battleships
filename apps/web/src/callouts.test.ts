@@ -6,7 +6,7 @@ import {
   CALLOUTS,
   HIT_CALLOUTS,
   INCOMING_CALLOUTS,
-  LAST_HULL_CALLOUTS,
+  LAST_SHIP_CALLOUTS,
   OWN_LOSS_CALLOUTS,
 } from './callouts.js';
 
@@ -22,15 +22,20 @@ describe('callouts', () => {
     expect(new Set(CALLOUTS.map((callout) => callout.clip)).size).toBe(CALLOUTS.length);
   });
 
-  it('offers a choice at every moment, so nothing is heard twice running', () => {
-    for (const moment of [HIT_CALLOUTS, ALIEN_LOSS_CALLOUTS, INCOMING_CALLOUTS, OWN_LOSS_CALLOUTS, LAST_HULL_CALLOUTS]) {
-      expect(moment.length).toBeGreaterThan(2);
+  it('offers enough readings of every moment that a campaign does not settle into a script', () => {
+    for (const moment of [HIT_CALLOUTS, ALIEN_LOSS_CALLOUTS, INCOMING_CALLOUTS, OWN_LOSS_CALLOUTS, LAST_SHIP_CALLOUTS]) {
+      expect(moment.length).toBeGreaterThanOrEqual(6);
     }
+  });
+
+  it('calls a craft a ship, as the screen does', () => {
+    const spoken = CALLOUTS.filter((callout) => /hull/i.test(callout.line)).map((callout) => callout.line);
+    expect(spoken).toEqual([]);
   });
 
   it('keeps the Kraal off the crew voices', () => {
     for (const callout of [...ALIEN_LOSS_CALLOUTS, ...INCOMING_CALLOUTS]) expect(callout.voice).toBe('kraal');
-    for (const callout of [...HIT_CALLOUTS, ...OWN_LOSS_CALLOUTS, ...LAST_HULL_CALLOUTS]) {
+    for (const callout of [...HIT_CALLOUTS, ...OWN_LOSS_CALLOUTS, ...LAST_SHIP_CALLOUTS]) {
       expect(callout.voice).not.toBe('kraal');
     }
   });
