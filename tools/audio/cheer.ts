@@ -53,7 +53,7 @@ const LENGTH_S = 3.4;
 
 /** The deck under the voices: a swell of noise, not a hiss. */
 const ROAR =
-  `anoisesrc=c=pink:d=${LENGTH_S}:r=22050,` +
+  `anoisesrc=c=pink:d=${LENGTH_S}:r=22050:seed=1970,` +
   'highpass=f=300,lowpass=f=2600,tremolo=f=7:d=0.7,' +
   'afade=t=in:d=0.5,afade=t=out:st=2.4:d=1,volume=0.22';
 
