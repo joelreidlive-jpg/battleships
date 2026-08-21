@@ -25,7 +25,7 @@ import { GENERATED_BANNER } from './banner.js';
  */
 export function productGuide(): string {
   return [
-    '# Orbital Defence Command — game guide',
+    '# Orbital Battleships Command — game guide',
     '',
     GENERATED_BANNER,
     '',

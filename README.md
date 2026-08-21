@@ -1,4 +1,4 @@
-# Orbital Defence Command
+# Orbital Battleships Command
 
 Battleship, played against an alien invasion, in the visual language of a 1970s
 science-fiction paperback. Classic rules — 10x10 grid, the five standard hulls,

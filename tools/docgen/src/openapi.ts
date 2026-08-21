@@ -59,7 +59,7 @@ export function openApiDocument(): string {
     '# which the technical specification embeds in full.',
     'openapi: 3.1.0',
     'info:',
-    '  title: Orbital Defence Command API',
+    '  title: Orbital Battleships Command API',
     '  version: 1.0.0',
     '  description: >-',
     '    Server-authoritative Battleship. The alien deployment is never returned',

@@ -1,4 +1,4 @@
-# Orbital Defence Command — technical specification
+# Orbital Battleships Command — technical specification
 
 > **Generated document — do not edit.**
 > Produced by `pnpm docs` from the code that implements the behaviour it
