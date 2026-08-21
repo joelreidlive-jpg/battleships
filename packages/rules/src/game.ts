@@ -73,6 +73,15 @@ export function sunkHulls(grid: Grid): HullId[] {
   return grid.fleet.map((placement) => placement.hull).filter((hull) => isSunk(grid, hull));
 }
 
+/**
+ * Placements of the hulls that have been destroyed. Safe to hand to the
+ * opposing side: every cell of a sunk hull has already been struck, so its
+ * position is public.
+ */
+export function wreckage(grid: Grid): Placement[] {
+  return grid.fleet.filter((placement) => isSunk(grid, placement.hull));
+}
+
 export function isFleetDestroyed(grid: Grid): boolean {
   return grid.fleet.every((placement) => isSunk(grid, placement.hull));
 }

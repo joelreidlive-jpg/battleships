@@ -391,12 +391,12 @@ button.primary {
 /* A destroyed hull is drawn as a burnt-out wreck rather than faded away, so
    the reveal at the end of a campaign is still legible. */
 .ship--sunk {
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .ship--sunk .ship__skin,
 .ship--sunk .ship__skin-disc {
-  fill: #6b5a44;
+  fill: #8a7256;
 }
 
 .ship--sunk .ship__belly,

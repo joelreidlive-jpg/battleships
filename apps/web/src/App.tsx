@@ -252,7 +252,7 @@ function Battle({ match, busy, captain, reaction, onFire, onResign, onNewCampaig
           }
           subtitle={finished ? 'Invader deployment revealed.' : 'Choose a cell to fire on.'}
           shots={match.offence.shots}
-          {...(match.alienFleet ? { fleet: match.alienFleet } : {})}
+          fleet={match.alienFleet ?? match.offence.wrecks}
           onFire={onFire}
           disabled={busy || finished}
           side="alien"
