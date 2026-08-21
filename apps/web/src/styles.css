@@ -901,16 +901,14 @@ button.primary {
   }
 }
 
-/* Whoever holds the guns, painted. Sits over the top-right of the grids. */
-.boards {
-  position: relative;
+/* Whoever holds the guns, painted. Sits clear above the grids' right corner. */
+.portrait-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 6px;
 }
 
 .portrait {
-  position: absolute;
-  top: -14px;
-  right: -6px;
-  z-index: 4;
   margin: 0;
   width: 132px;
   text-align: center;
@@ -960,19 +958,16 @@ button.primary {
   }
 }
 
-/* Score strip along the foot of every screen. */
+/* Score line, under the grids. */
 .scoreline {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 20;
   display: flex;
   justify-content: center;
   gap: 40px;
-  padding: 8px 16px;
+  margin-top: 18px;
+  padding: 10px 16px;
   background: linear-gradient(to top, rgba(12, 6, 3, 0.96), rgba(74, 37, 17, 0.9));
   border-top: 3px solid var(--orange);
+  border-bottom: 3px solid var(--orange);
   font-family: var(--display);
   letter-spacing: 0.14em;
   text-transform: uppercase;
