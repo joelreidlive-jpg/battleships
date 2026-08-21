@@ -194,7 +194,7 @@ function ScoreTable({ match }: { match: MatchView }) {
     ['Accuracy bonus', score.accuracy],
     ['Fleet preserved', score.survival],
     ['Victory', score.victory],
-    ['Wasted ordnance', -score.wastedShots],
+    ['Wasted ordnance', score.wastedShots === 0 ? 0 : -score.wastedShots],
   ];
   return (
     <table className="score">
