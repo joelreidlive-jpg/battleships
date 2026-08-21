@@ -17,6 +17,7 @@ import { Board } from './Board.js';
 export interface DeployProps {
   readonly onLaunch: (fleet: readonly Placement[] | undefined) => void;
   readonly busy: boolean;
+  readonly starfleet: string;
 }
 
 /**
@@ -24,7 +25,7 @@ export interface DeployProps {
  * `validateFleet` the Worker will run decides whether the deployment is legal,
  * so the client can never offer something the server would reject.
  */
-export function Deploy({ onLaunch, busy }: DeployProps) {
+export function Deploy({ onLaunch, busy, starfleet }: DeployProps) {
   const [placed, setPlaced] = useState<Placement[]>([]);
   const [orientation, setOrientation] = useState<Orientation>('horizontal');
   const [hover, setHover] = useState<Cell | null>(null);
@@ -44,8 +45,8 @@ export function Deploy({ onLaunch, busy }: DeployProps) {
   return (
     <div className="deploy">
       <Board
-        title="Home Grid — deploy your fleet"
-        subtitle={next ? `Positioning the ${hullName(next, 'earth')}` : 'Fleet ready.'}
+        title={`Home Grid — ${starfleet} Starfleet`}
+        subtitle={next ? `Positioning the ${hullName(next, 'earth')}` : 'Fleet ready. Launch when you are.'}
         shots={[]}
         fleet={placed}
         onFire={(cell) => {

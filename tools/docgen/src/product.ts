@@ -7,6 +7,7 @@ import {
   RANKS,
   ROWS,
   SCORING,
+  STORY,
   TOTAL_SECTIONS,
   type Placement,
   cellAt,
@@ -17,18 +18,20 @@ import {
   scoreFor,
 } from '@bs/rules';
 import { DOCTRINE_LIST } from '@bs/ai';
-import { GENERATED_BANNER } from './banner.js';
 
 /**
- * The product owner's document: what the game is, how it is played, what
- * everything is worth. Every number in it is read from the engine, and the
- * worked example is produced by playing an actual game through the rules.
+ * The player's document: what the game is, how it is played, what everything
+ * is worth. Every number in it is read from the engine, and the worked example
+ * is produced by playing an actual game through the rules.
+ *
+ * It is read inside the game, so it carries nothing a player cannot act on:
+ * no implementation, no roadmap, and no notes about how the game is built or
+ * run. That material belongs in the technical specification. The generated
+ * banner is omitted for the same reason — CONTRIBUTING covers `pnpm docs`.
  */
 export function productGuide(): string {
   return [
     '# Orbital Battleships Command — game guide',
-    '',
-    GENERATED_BANNER,
     '',
     premise(),
     theBoard(),
@@ -39,17 +42,21 @@ export function productGuide(): string {
     workedExample(),
     difficulty(),
     progression(),
-    notInThisRelease(),
   ].join('\n');
 }
 
 function premise(): string {
   return `## The premise
 
-An alien invasion fleet has taken up station beyond the orbit of the Moon. You
-command Earth's remaining defence wing. Neither side can see the other: both
-fleets sit hidden on a ${COLUMNS}x${ROWS} sector grid, and the only way to find an enemy hull
-is to fire into a sector and see what comes back.
+${STORY}
+
+Before your first campaign you sign your commission: your captain's name and
+the starfleet you command. Both are yours to choose, and the starfleet's name
+flies above your Home Grid for the rest of the war.
+
+You command Earth's remaining defence wing. Neither side can see the other:
+both fleets sit hidden on a ${COLUMNS}x${ROWS} sector grid, and the only way to find an enemy
+hull is to fire into a sector and see what comes back.
 
 It is Battleship. The rules, the grid, the fleet sizes and the turn order are
 the classic ones; the fiction, the artwork and the scoring are ours.
@@ -72,7 +79,8 @@ row of the second column.
 
 function theFleet(): string {
   const rows = FLEET.map(
-    (ship) => `| ${ship.count} | ${ship.sections} | ${ship.earthName} | ${ship.alienName} | ${ship.blurb} |`,
+    (ship) =>
+      `| ${ship.count} | ${ship.sections} | ${ship.earthName} | ${ship.alienName} | ${ship.ratings.speed}/5 | ${ship.ratings.defence}/5 | ${ship.ratings.firepower}/5 | ${ship.blurb} |`,
   ).join('\n');
   return `## The fleets
 
@@ -80,9 +88,15 @@ Both sides field the same ${HULLS.length} hulls under different names. Where a c
 deployed more than once the individual craft are numbered — Ion Cruiser I and
 Ion Cruiser II — and each is positioned, damaged and destroyed separately.
 
-| Count | Sections each | Earth Defence Wing | Invasion Fleet | Notes |
-| --- | --- | --- | --- | --- |
+| Count | Sections each | Earth Defence Wing | Invasion Fleet | Speed | Defence | Firepower | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
 ${rows}
+
+Speed, defence and firepower are the character of a hull, not a rule: every
+ship fires one shot a turn and loses one section per hit. What they tell you is
+the trade you are making when you place it — the battleship soaks punishment
+but is the easiest thing on the grid to find, and a submarine is almost
+impossible to find but dies to a single lucky shot.
 
 That is **${HULLS.length} hulls, ${TOTAL_SECTIONS} sections** per side. A hull occupies that many adjacent sectors in a
 straight line, north–south or east–west. Hulls may not overlap and may not run
@@ -91,8 +105,8 @@ standard rule, and one a careful player can use to hide a short hull against a
 long one.
 
 You may position your fleet by hand, or let Fleet Command deploy it for you.
-The invader's fleet is positioned by the server and is never sent to your
-browser until the battle ends.
+The invader deploys under the same rules, out of sight; you will not see where
+its hulls lie until the battle is over.
 
 `;
 }
@@ -206,23 +220,24 @@ shot, while the invader lands three hits on your ${FLEET[0].earthName}:
 function difficulty(): string {
   const rows = DOCTRINE_LIST.map(
     (doctrine) =>
-      `| ${doctrine.name} | x${doctrine.scoreMultiplier} | ${doctrine.expectedShots} | ${doctrine.expectedHuntShots} | ${doctrine.targeting} |`,
+      `| ${doctrine.name} | x${doctrine.scoreMultiplier} | ${doctrine.expectedHuntShots} | ${doctrine.tagline} |`,
   ).join('\n');
   return `## Invasion doctrines
 
-Difficulty is the invader's targeting doctrine. Nothing else changes: the
-grid, the fleets and the scoring are identical at every level.
+Choose how the invader fights before you launch. Nothing else changes: the
+grid, the fleets and the scoring are identical whichever you pick, so the
+harder the invader, the more your score is multiplied.
 
-| Doctrine | Score multiplier | Mean shots to clear a fleet | Mean shots to the last multi-section hull | How it aims |
-| --- | --- | --- | --- | --- |
+| Doctrine | Score multiplier | Shots it needs to hunt down your bigger hulls | How it comes at you |
+| --- | --- | --- | --- |
 ${rows}
 
-Both figures are measured over 300 simulated campaigns; ${PERFECT_SHOT_COUNT} shots is perfect and
-100 is the whole grid. The second column is the fairer comparison: a
-single-section submarine leaves nothing to deduce, so the last four kills are a
-search that costs every doctrine about the same, which flattens the first
-column. On the hulls where skill applies, ${DOCTRINE_LIST[2].name} needs roughly half the
-shots ${DOCTRINE_LIST[0].name} does.
+The shot count is what the invader typically spends destroying every hull of
+yours larger than a submarine — ${PERFECT_SHOT_COUNT} shots would be flawless and 100 is the
+whole grid, so lower means a shorter, more dangerous campaign. Your four
+single-section submarines are pure luck to find, and cost every invader about
+the same, so they are left out of the comparison. Against ${DOCTRINE_LIST[2].name} expect
+to lose ships roughly twice as fast as against ${DOCTRINE_LIST[0].name}.
 
 `;
 }
@@ -231,27 +246,13 @@ function progression(): string {
   const rows = RANKS.map((rank) => `| ${rank.title} | ${rank.minCareerScore.toLocaleString('en-GB')} |`).join('\n');
   return `## Career
 
-Scores accumulate across campaigns against an anonymous identity held in your
-browser. There is no sign-up; clearing your browser storage starts a new
-career.
+Every campaign you finish adds to a lifetime score, and the rank beside your
+name climbs with it. There is nothing to sign up for: your record simply
+follows the device you play on.
 
 | Rank | Lifetime score |
 | --- | --- |
 ${rows}
 
-`;
-}
-
-function notInThisRelease(): string {
-  return `## Not in this release
-
-Stated so nobody plans around them:
-
-- No human-versus-human play. The architecture allows it — the invader submits
-  shots through the same code path a second player would — but no transport or
-  matchmaking exists.
-- No accounts, and therefore no cross-device career.
-- No global leaderboard; the career record is per browser.
-- No sound.
 `;
 }

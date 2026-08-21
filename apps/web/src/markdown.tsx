@@ -1,5 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 
+const BULLET = /^(\s*)([-*]|\d+\.)\s+/;
+
 /**
  * A deliberately small Markdown renderer, covering exactly what the generated
  * documentation uses: headings, paragraphs, lists, tables, fenced code and
@@ -69,22 +71,11 @@ export function Markdown({ source }: { source: string }): ReactNode {
       continue;
     }
 
-    if (/^\s*([-*]|\d+\.)\s+/.test(line)) {
-      const ordered = /^\s*\d+\./.test(line);
-      const items: string[] = [];
-      while (i < lines.length && /^\s*([-*]|\d+\.)\s+/.test(lines[i])) {
-        items.push(lines[i].replace(/^\s*([-*]|\d+\.)\s+/, ''));
-        i++;
-      }
+    if (BULLET.test(line)) {
+      const block: string[] = [];
+      while (i < lines.length && lines[i].trim() !== '') block.push(lines[i++]);
       i--;
-      const List = ordered ? 'ol' : 'ul';
-      blocks.push(
-        <List key={i}>
-          {items.map((item, index) => (
-            <li key={index}>{inline(item)}</li>
-          ))}
-        </List>,
-      );
+      blocks.push(<Fragment key={i}>{list(block)}</Fragment>);
       continue;
     }
 
@@ -97,6 +88,41 @@ export function Markdown({ source }: { source: string }): ReactNode {
   }
 
   return <>{blocks}</>;
+}
+
+/**
+ * One list, plus any list nested under it. A line without a bullet continues
+ * the item above it, and a bullet indented further than the first one opens a
+ * nested list, which is how the generated documents wrap long items.
+ */
+function list(lines: string[]): ReactNode {
+  const first = BULLET.exec(lines[0]);
+  if (!first) return null;
+  const indent = first[1].length;
+  const ordered = /\d/.test(first[2]);
+  const items: { text: string; nested: string[] }[] = [];
+
+  for (const line of lines) {
+    const bullet = BULLET.exec(line);
+    const item = items[items.length - 1];
+    if (bullet && bullet[1].length <= indent) items.push({ text: line.slice(bullet[0].length), nested: [] });
+    else if (!item) continue;
+    else if (bullet) item.nested.push(line.slice(indent));
+    else if (item.nested.length > 0) item.nested.push(line.slice(indent));
+    else item.text += ` ${line.trim()}`;
+  }
+
+  const List = ordered ? 'ol' : 'ul';
+  return (
+    <List>
+      {items.map((item, index) => (
+        <li key={index}>
+          {inline(item.text)}
+          {item.nested.length > 0 ? list(item.nested) : null}
+        </li>
+      ))}
+    </List>
+  );
 }
 
 /** `**bold**`, `*italic*` and `` `code` ``. Everything else is literal text. */

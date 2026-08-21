@@ -23,6 +23,17 @@ export interface ShipClass {
   /** Name shown for the same hull in the invader's fleet. */
   readonly alienName: string;
   readonly blurb: string;
+  /**
+   * Briefing ratings, out of five. They are flavour, not mechanics: every hull
+   * fires one shot a turn and dies one section at a time, so nothing in the
+   * engine reads these. They describe what a hull's length costs it — a long
+   * hull is slow and easy to find but soaks damage; a submarine is the reverse.
+   */
+  readonly ratings: {
+    readonly speed: number;
+    readonly defence: number;
+    readonly firepower: number;
+  };
 }
 
 export const FLEET: readonly ShipClass[] = [
@@ -33,6 +44,7 @@ export const FLEET: readonly ShipClass[] = [
     earthName: 'Solar Battleship',
     alienName: 'Hive Dreadnought',
     blurb: 'Four sections of armoured spine. The flagship, and the hardest hull to hide.',
+    ratings: { speed: 1, defence: 5, firepower: 5 },
   },
   {
     id: 'cruiser',
@@ -41,6 +53,7 @@ export const FLEET: readonly ShipClass[] = [
     earthName: 'Ion Cruiser',
     alienName: 'Swarm Cruiser',
     blurb: 'Three sections of ion lance. Fast enough to reposition between waves.',
+    ratings: { speed: 3, defence: 4, firepower: 4 },
   },
   {
     id: 'destroyer',
@@ -49,6 +62,7 @@ export const FLEET: readonly ShipClass[] = [
     earthName: 'Nova Destroyer',
     alienName: 'Needle Skiff',
     blurb: 'Two sections. Numerous, and the hull that decides most endgames.',
+    ratings: { speed: 4, defence: 2, firepower: 3 },
   },
   {
     id: 'submarine',
@@ -57,6 +71,7 @@ export const FLEET: readonly ShipClass[] = [
     earthName: 'Void Submarine',
     alienName: 'Shadow Lurker',
     blurb: 'A single section running dark. Impossible to deduce, and found only by luck.',
+    ratings: { speed: 5, defence: 1, firepower: 2 },
   },
 ];
 

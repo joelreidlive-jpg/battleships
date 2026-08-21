@@ -1,16 +1,24 @@
 # Orbital Battleships Command — game guide
 
-> **Generated document — do not edit.**
-> Produced by `pnpm docs` from the code that implements the behaviour it
-> describes. CI runs `pnpm docs:check`, so this file cannot drift from the
-> engine, the AI, the API surface or the database schema.
-
 ## The premise
 
-An alien invasion fleet has taken up station beyond the orbit of the Moon. You
-command Earth's remaining defence wing. Neither side can see the other: both
-fleets sit hidden on a 10x10 sector grid, and the only way to find an enemy hull
-is to fire into a sector and see what comes back.
+They came out of the dark past Neptune without a word of warning: the
+Kraal Ascendancy, a hive of world-burners who have crossed half the galaxy leaving
+nothing but cinders behind them, and who have decided that Earth burns next.
+Their armada is already in high orbit, running silent, and every fleet we had
+between here and Mars is gone. What is left is you, one grid of home sectors,
+and twenty sections of hull between eight billion people and the fire. Their
+ships are hidden. So are yours. Fire into the dark, read what comes back, and
+hunt the Kraal down sector by sector — because the moment they finish plotting
+your fleet, the bombardment of Earth begins.
+
+Before your first campaign you sign your commission: your captain's name and
+the starfleet you command. Both are yours to choose, and the starfleet's name
+flies above your Home Grid for the rest of the war.
+
+You command Earth's remaining defence wing. Neither side can see the other:
+both fleets sit hidden on a 10x10 sector grid, and the only way to find an enemy
+hull is to fire into a sector and see what comes back.
 
 It is Battleship. The rules, the grid, the fleet sizes and the turn order are
 the classic ones; the fiction, the artwork and the scoring are ours.
@@ -32,12 +40,18 @@ Both sides field the same 10 hulls under different names. Where a class is
 deployed more than once the individual craft are numbered — Ion Cruiser I and
 Ion Cruiser II — and each is positioned, damaged and destroyed separately.
 
-| Count | Sections each | Earth Defence Wing | Invasion Fleet | Notes |
-| --- | --- | --- | --- | --- |
-| 1 | 4 | Solar Battleship | Hive Dreadnought | Four sections of armoured spine. The flagship, and the hardest hull to hide. |
-| 2 | 3 | Ion Cruiser | Swarm Cruiser | Three sections of ion lance. Fast enough to reposition between waves. |
-| 3 | 2 | Nova Destroyer | Needle Skiff | Two sections. Numerous, and the hull that decides most endgames. |
-| 4 | 1 | Void Submarine | Shadow Lurker | A single section running dark. Impossible to deduce, and found only by luck. |
+| Count | Sections each | Earth Defence Wing | Invasion Fleet | Speed | Defence | Firepower | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 4 | Solar Battleship | Hive Dreadnought | 1/5 | 5/5 | 5/5 | Four sections of armoured spine. The flagship, and the hardest hull to hide. |
+| 2 | 3 | Ion Cruiser | Swarm Cruiser | 3/5 | 4/5 | 4/5 | Three sections of ion lance. Fast enough to reposition between waves. |
+| 3 | 2 | Nova Destroyer | Needle Skiff | 4/5 | 2/5 | 3/5 | Two sections. Numerous, and the hull that decides most endgames. |
+| 4 | 1 | Void Submarine | Shadow Lurker | 5/5 | 1/5 | 2/5 | A single section running dark. Impossible to deduce, and found only by luck. |
+
+Speed, defence and firepower are the character of a hull, not a rule: every
+ship fires one shot a turn and loses one section per hit. What they tell you is
+the trade you are making when you place it — the battleship soaks punishment
+but is the easiest thing on the grid to find, and a submarine is almost
+impossible to find but dies to a single lucky shot.
 
 That is **10 hulls, 20 sections** per side. A hull occupies that many adjacent sectors in a
 straight line, north–south or east–west. Hulls may not overlap and may not run
@@ -46,8 +60,8 @@ standard rule, and one a careful player can use to hide a short hull against a
 long one.
 
 You may position your fleet by hand, or let Fleet Command deploy it for you.
-The invader's fleet is positioned by the server and is never sent to your
-browser until the battle ends.
+The invader deploys under the same rules, out of sight; you will not see where
+its hulls lie until the battle is over.
 
 
 ## How a turn works
@@ -118,28 +132,29 @@ shot, while the invader lands three hits on your Solar Battleship:
 
 ## Invasion doctrines
 
-Difficulty is the invader's targeting doctrine. Nothing else changes: the
-grid, the fleets and the scoring are identical at every level.
+Choose how the invader fights before you launch. Nothing else changes: the
+grid, the fleets and the scoring are identical whichever you pick, so the
+harder the invader, the more your score is multiplied.
 
-| Doctrine | Score multiplier | Mean shots to clear a fleet | Mean shots to the last multi-section hull | How it aims |
-| --- | --- | --- | --- | --- |
-| Scout Wave | x1 | 96.7 | 95.5 | Fires at a uniformly random cell it has not tried before, ignoring its own hits. |
-| Raider Flight | x1.5 | 85.6 | 66.4 | Sweeps cells on a diagonal whose spacing equals the smallest hull still afloat; on a hit, works outward along the axis the hits establish. |
-| Overmind | x2 | 85.5 | 50.3 | Counts, for every untried cell, how many placements of the surviving hulls are consistent with its shot history — weighting those that explain a known hit — and fires at the maximum. |
+| Doctrine | Score multiplier | Shots it needs to hunt down your bigger hulls | How it comes at you |
+| --- | --- | --- | --- |
+| Scout Wave | x1 | 95.5 | Probing fire, no coordination. |
+| Raider Flight | x1.5 | 66.4 | Hunts on a parity sweep, then finishes what it finds. |
+| Overmind | x2 | 50.3 | Counts every arrangement your fleet could still be in. |
 
-Both figures are measured over 300 simulated campaigns; 20 shots is perfect and
-100 is the whole grid. The second column is the fairer comparison: a
-single-section submarine leaves nothing to deduce, so the last four kills are a
-search that costs every doctrine about the same, which flattens the first
-column. On the hulls where skill applies, Overmind needs roughly half the
-shots Scout Wave does.
+The shot count is what the invader typically spends destroying every hull of
+yours larger than a submarine — 20 shots would be flawless and 100 is the
+whole grid, so lower means a shorter, more dangerous campaign. Your four
+single-section submarines are pure luck to find, and cost every invader about
+the same, so they are left out of the comparison. Against Overmind expect
+to lose ships roughly twice as fast as against Scout Wave.
 
 
 ## Career
 
-Scores accumulate across campaigns against an anonymous identity held in your
-browser. There is no sign-up; clearing your browser storage starts a new
-career.
+Every campaign you finish adds to a lifetime score, and the rank beside your
+name climbs with it. There is nothing to sign up for: your record simply
+follows the device you play on.
 
 | Rank | Lifetime score |
 | --- | --- |
@@ -150,14 +165,3 @@ career.
 | Star Marshal | 100,000 |
 | Defender of Earth | 250,000 |
 
-
-## Not in this release
-
-Stated so nobody plans around them:
-
-- No human-versus-human play. The architecture allows it — the invader submits
-  shots through the same code path a second player would — but no transport or
-  matchmaking exists.
-- No accounts, and therefore no cross-device career.
-- No global leaderboard; the career record is per browser.
-- No sound.
