@@ -63,6 +63,9 @@ export interface CreateMatchRequest {
   readonly difficulty?: Difficulty;
   /** Omit to have Fleet Command deploy for you. */
   readonly fleet?: readonly Placement[];
+  /** Names from the briefing, carried so a finished campaign can be posted to the board. */
+  readonly captain?: string;
+  readonly starfleet?: string;
 }
 
 export interface CreateMatchResponse {
@@ -135,6 +138,25 @@ export interface ReferenceResponse {
 export interface HealthResponse {
   readonly status: 'ok';
   readonly version: string;
+}
+
+/** One row of the shared board. Ranks are 1-based and dense from the top. */
+export interface LeaderboardEntry {
+  readonly rank: number;
+  readonly captain: string;
+  readonly starfleet: string;
+  readonly difficulty: Difficulty;
+  readonly won: boolean;
+  readonly score: number;
+  readonly achievedAt: number;
+  /** True when this row was posted by the bearer of the calling token. */
+  readonly you: boolean;
+}
+
+export interface LeaderboardResponse {
+  readonly entries: readonly LeaderboardEntry[];
+  /** The caller's best rank within `entries`, when they hold one. */
+  readonly yourRank?: number;
 }
 
 export interface ErrorResponse {

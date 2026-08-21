@@ -81,6 +81,11 @@ Turn order strictly alternates. A hit does not earn a second shot, so both
 sides always have taken the same number of shots — which is what makes
 accuracy worth scoring.
 
+The portrait beside the grids shows whoever currently holds the guns: your
+captain while the shot is yours, the Kraal warlord while the invader takes its
+time over the reply. Destroy one of theirs and your captain punches the air;
+lose one of yours and the warlord laughs.
+
 
 ## Winning
 
@@ -165,4 +170,16 @@ follows the device you play on.
 | Wing Commander | 50,000 |
 | Star Marshal | 100,000 |
 | Defender of Earth | 250,000 |
+
+
+## The board of captains
+
+Your score and your best score sit along the foot of the screen throughout.
+Every finished campaign is posted to a single board shared by everyone playing,
+under the captain and starfleet names you signed at your briefing — so the
+captains already on it are the ones you have to beat.
+
+Win a campaign, or beat your own best, and the flypast gives way to that board
+with your entry marked and scrolled to. Beating your best is called out in
+lights before the list appears.
 

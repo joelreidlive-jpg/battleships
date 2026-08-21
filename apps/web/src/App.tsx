@@ -7,7 +7,7 @@ import {
   TOTAL_SECTIONS,
   formatCell,
 } from '@bs/rules';
-import type { MatchView, ProgressResponse } from '@bs/protocol';
+import type { LeaderboardResponse, MatchView, ProgressResponse } from '@bs/protocol';
 import { Board } from './Board.js';
 import { Briefing } from './Briefing.js';
 import { type Commission, saveCommission, storedCommission } from './commission.js';
@@ -15,8 +15,15 @@ import { Deploy } from './Deploy.js';
 import { DOCTRINE_LABEL } from './doctrine.js';
 import { Flypast } from './Flypast.js';
 import { Manual } from './Manual.js';
+import { ALIEN_PAUSE_MS, beforeReply } from './pace.js';
+import { Portrait, type Reaction } from './Portrait.js';
 import * as api from './api.js';
 import * as sound from './sound.js';
+
+/** How long a raised fist or a laugh holds before the portrait settles. */
+const REACTION_MS = 3200;
+
+const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 export function App() {
   const [match, setMatch] = useState<MatchView | null>(null);
@@ -27,9 +34,13 @@ export function App() {
   const [commission, setCommission] = useState<Commission | null>(storedCommission);
   const [mute, setMute] = useState(sound.muted);
   /** Set when a campaign ends, cleared once the flypast has run. */
-  const [flypast, setFlypast] = useState<boolean | null>(null);
+  const [flypast, setFlypast] = useState<{ readonly won: boolean; readonly highScore: boolean } | null>(null);
+  const [board, setBoard] = useState<LeaderboardResponse | null>(null);
+  const [reaction, setReaction] = useState<Reaction>('none');
   /** Log entries already sounded, so a re-render never replays an explosion. */
   const heard = useRef(0);
+
+  const dismissFlypast = useCallback(() => setFlypast(null), []);
 
   const refreshCareer = useCallback(() => {
     if (!api.playerToken()) return;
@@ -69,18 +80,38 @@ export function App() {
 
     const afloat = HULLS.length - view.defence.sunk.length;
     if (alien === 'sunk' && afloat === 1 && view.status === 'playing') queue(sound.playLastHullWarning, 3400);
+
+    if (earth === 'sunk') setReaction('cheer');
+    else if (alien === 'sunk') setReaction('laugh');
   };
+
+  useEffect(() => {
+    if (reaction === 'none') return undefined;
+    const timer = window.setTimeout(() => setReaction('none'), REACTION_MS);
+    return () => window.clearTimeout(timer);
+  }, [reaction]);
 
   const run = async (action: () => Promise<MatchView>) => {
     setBusy(true);
     setError(null);
     try {
       const view = await action();
+      // The invader's reply is held back so the exchange reads as two turns
+      // rather than one, at roughly the pace of a person taking their shot.
+      const paused = beforeReply(view);
+      if (paused) {
+        setMatch(paused);
+        announce(paused);
+        await wait(ALIEN_PAUSE_MS);
+      }
       setMatch(view);
       announce(view);
       if (view.status === 'finished') {
+        const highScore = view.score.total > (career?.progress.bestScore ?? 0);
         refreshCareer();
-        setFlypast(view.winner === 'earth');
+        setBoard(null);
+        api.leaderboard().then(setBoard).catch(() => undefined);
+        setFlypast({ won: view.winner === 'earth', highScore });
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'the transmission failed');
@@ -94,7 +125,9 @@ export function App() {
     heard.current = 0;
     sound.resetCallouts();
     setFlypast(null);
-    return run(() => api.createMatch(commission.doctrine, fleet));
+    setReaction('none');
+    const { captain, starfleet } = commission;
+    return run(() => api.createMatch(commission.doctrine, { captain, starfleet }, fleet));
   };
 
   const toggleMute = () => {
@@ -147,15 +180,36 @@ export function App() {
           match={match}
           busy={busy}
           starfleet={commission.starfleet}
+          captain={commission.captain}
+          reaction={reaction}
           onFire={(cell) => run(() => api.fire(match.matchId, cell))}
           onResign={() => run(() => api.resign(match.matchId))}
           onNewCampaign={() => setMatch(null)}
         />
       )}
 
-      {flypast === null ? null : <Flypast won={flypast} onDone={() => setFlypast(null)} />}
+      {flypast === null ? null : (
+        <Flypast
+          won={flypast.won}
+          highScore={flypast.highScore}
+          board={board}
+          onDone={dismissFlypast}
+        />
+      )}
 
       {manual ? <Manual onClose={() => setManual(false)} /> : null}
+
+      <footer className="scoreline">
+        <span>
+          Score <strong>{(match?.score.total ?? 0).toLocaleString()}</strong>
+        </span>
+        <span>
+          Hi-score{' '}
+          <strong>
+            {Math.max(career?.progress.bestScore ?? 0, match?.score.total ?? 0).toLocaleString()}
+          </strong>
+        </span>
+      </footer>
     </div>
   );
 }
@@ -164,12 +218,14 @@ interface BattleProps {
   readonly match: MatchView;
   readonly busy: boolean;
   readonly starfleet: string;
+  readonly captain: string;
+  readonly reaction: Reaction;
   readonly onFire: (cell: number) => void;
   readonly onResign: () => void;
   readonly onNewCampaign: () => void;
 }
 
-function Battle({ match, busy, starfleet, onFire, onResign, onNewCampaign }: BattleProps) {
+function Battle({ match, busy, starfleet, captain, reaction, onFire, onResign, onNewCampaign }: BattleProps) {
   const finished = match.status === 'finished';
   const won = match.winner === 'earth';
 
@@ -194,6 +250,7 @@ function Battle({ match, busy, starfleet, onFire, onResign, onNewCampaign }: Bat
       ) : null}
 
       <div className="boards">
+        <Portrait turn={match.turn} reaction={reaction} captain={captain} />
         <Board
           title="Invasion Grid"
           subtitle={finished ? 'Invader deployment revealed.' : 'Choose a cell to fire on.'}

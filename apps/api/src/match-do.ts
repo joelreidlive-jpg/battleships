@@ -23,12 +23,16 @@ import {
 import { chooseShot, randomFleet } from '@bs/ai';
 import type { CreateMatchRequest, LogEntry, MatchView } from '@bs/protocol';
 import { MatchError } from './errors.js';
+import { cleanName, postScore } from './leaderboard.js';
 import { recordGame } from './players.js';
 
 interface MatchMeta {
   readonly matchId: string;
   readonly difficulty: Difficulty;
   readonly playerKey: string;
+  /** Briefing names, kept so the finished campaign can be posted to the board. */
+  readonly captain: string;
+  readonly starfleet: string;
   /** Digest of the bearer token, so the object never stores the secret. */
   readonly playerTokenHash: string;
   readonly createdAt: number;
@@ -86,6 +90,8 @@ export class MatchDO extends DurableObject<Env> {
       matchId,
       difficulty,
       playerKey,
+      captain: cleanName(request.captain, 'Unknown Captain'),
+      starfleet: cleanName(request.starfleet, 'Unnamed Starfleet'),
       playerTokenHash: await hash(playerToken),
       createdAt: Date.now(),
     };
@@ -182,13 +188,23 @@ export class MatchDO extends DurableObject<Env> {
     if (meta.recorded) return;
     const state = this.state!;
     const stats = statsFor(state, 'earth');
+    const won = state.winner === 'earth';
+    const score = scoreFor(state, meta.difficulty).total;
     await recordGame(this.env.DB, meta.playerKey, {
       matchId: meta.matchId,
       difficulty: meta.difficulty,
-      won: state.winner === 'earth',
-      score: scoreFor(state, meta.difficulty).total,
+      won,
+      score,
       shots: stats.shots,
       hits: stats.hits,
+    });
+    await postScore(this.env.DB, meta.playerKey, {
+      // Campaigns started before the board existed carry no names.
+      captain: cleanName(meta.captain, 'Unknown Captain'),
+      starfleet: cleanName(meta.starfleet, 'Unnamed Starfleet'),
+      difficulty: meta.difficulty,
+      won,
+      score,
     });
     this.meta = { ...meta, recorded: true };
     await this.ctx.storage.put('meta', this.meta);
