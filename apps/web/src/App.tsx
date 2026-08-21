@@ -241,7 +241,7 @@ function Battle({ match, busy, captain, reaction, onFire, onResign, onNewCampaig
 
       <div className="boards">
         <Board
-          title="Invasion Grid"
+          title="Invasion Grid — Kraal"
           portrait={
             <Portrait
               who="kraal"
