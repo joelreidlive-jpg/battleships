@@ -9,6 +9,7 @@ import {
   hullName,
   hullSections,
   placementCells,
+  shipClass,
   validateFleet,
 } from '@bs/rules';
 import { Board } from './Board.js';
@@ -71,6 +72,7 @@ export function Deploy({ onLaunch, busy, starfleet }: DeployProps) {
                   .join(' ')}
               >
                 <RosterShip hull={hull.id} />
+                <span className="roster__tag">{shipClass(hull.ship).tagline}</span>
                 <span className="roster__pips">{'\u25A0'.repeat(hullSections(hull.id))}</span>
               </li>
             );

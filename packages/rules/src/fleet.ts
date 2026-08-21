@@ -23,6 +23,8 @@ export interface ShipClass {
   /** Name shown for the same hull in the invader's fleet. */
   readonly alienName: string;
   readonly blurb: string;
+  /** The blurb cut to a glance, for lists that show the hull's artwork. */
+  readonly tagline: string;
   /**
    * Briefing ratings, out of five. They are flavour, not mechanics: every hull
    * fires one shot a turn and dies one section at a time, so nothing in the
@@ -44,6 +46,7 @@ export const FLEET: readonly ShipClass[] = [
     earthName: 'Solar Battleship',
     alienName: 'Hive Dreadnought',
     blurb: 'Four sections of armoured spine. The flagship, and the hardest hull to hide.',
+    tagline: 'Armoured spine. Hardest to hide.',
     ratings: { speed: 1, defence: 5, firepower: 5 },
   },
   {
@@ -53,6 +56,7 @@ export const FLEET: readonly ShipClass[] = [
     earthName: 'Ion Cruiser',
     alienName: 'Swarm Cruiser',
     blurb: 'Three sections of ion lance. Fast enough to reposition between waves.',
+    tagline: 'Ion lance. Quick between waves.',
     ratings: { speed: 3, defence: 4, firepower: 4 },
   },
   {
@@ -62,6 +66,7 @@ export const FLEET: readonly ShipClass[] = [
     earthName: 'Nova Destroyer',
     alienName: 'Needle Skiff',
     blurb: 'Two sections. Numerous, and the hull that decides most endgames.',
+    tagline: 'Numerous. Decides most endgames.',
     ratings: { speed: 4, defence: 2, firepower: 3 },
   },
   {
@@ -71,6 +76,7 @@ export const FLEET: readonly ShipClass[] = [
     earthName: 'Void Submarine',
     alienName: 'Shadow Lurker',
     blurb: 'A single section running dark. Impossible to deduce, and found only by luck.',
+    tagline: 'Runs dark. Found only by luck.',
     ratings: { speed: 5, defence: 1, firepower: 2 },
   },
 ];

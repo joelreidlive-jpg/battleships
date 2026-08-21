@@ -424,9 +424,9 @@ button.primary {
 }
 
 .roster__item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 152px 1fr auto;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
   padding: 6px 10px;
   border-left: 5px solid var(--orange);
@@ -447,7 +447,13 @@ button.primary {
 .roster__ship {
   height: 30px;
   overflow: visible;
-  flex: none;
+  justify-self: start;
+}
+
+.roster__tag {
+  font-size: 0.82rem;
+  color: var(--cream);
+  opacity: 0.85;
 }
 
 .roster__pips {
