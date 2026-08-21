@@ -274,6 +274,11 @@ button.primary {
   stroke-width: 2;
 }
 
+/* Hulls and shot marks are drawn over the cells, which own the interaction. */
+.overlay {
+  pointer-events: none;
+}
+
 .hull {
   fill: var(--brown);
   stroke: var(--amber);
