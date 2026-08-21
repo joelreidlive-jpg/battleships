@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { COLUMN_LABELS, cellAt, formatCell, neighbours, parseCell } from './grid.js';
 import { FLEET, HULLS, TOTAL_SECTIONS, hullName, shipName } from './fleet.js';
 import { type Placement, candidatePlacements, placementCells, validateFleet } from './placement.js';
-import { RuleError, fire, isSunk, newGame, redactShot, statsFor } from './game.js';
+import { RuleError, fire, isSunk, newGame, redactShot, statsFor, wreckage } from './game.js';
 import { PERFECT_SHOT_COUNT, SCORING, maximumScore, scoreFor } from './scoring.js';
 import { rankFor } from './ranks.js';
 
@@ -151,6 +151,16 @@ describe('firing', () => {
   it('hides which hull was struck until it sinks', () => {
     expect(redactShot({ cell: 4, outcome: 'hit', hull: 'cruiser-1' }).hull).toBeUndefined();
     expect(redactShot({ cell: 4, outcome: 'sunk', hull: 'cruiser-1' }).hull).toBe('cruiser-1');
+  });
+
+  it('gives up a hull only once it is a wreck', () => {
+    let state = newGame(EARTH_FLEET, ALIEN_FLEET);
+    const destroyer = placementCells(ALIEN_FLEET[3]);
+    state = fire(state, 'earth', destroyer[0]).state;
+    expect(wreckage(state.alien)).toEqual([]);
+    state = fire(state, 'alien', 99).state;
+    state = fire(state, 'earth', destroyer[1]).state;
+    expect(wreckage(state.alien)).toEqual([ALIEN_FLEET[3]]);
   });
 
   it('ends the moment the last hull goes down, with no reply', () => {

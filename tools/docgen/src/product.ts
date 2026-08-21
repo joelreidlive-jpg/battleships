@@ -120,9 +120,11 @@ function howATurnWorks(): string {
 2. The result is announced immediately:
    - **Miss** — nothing there.
    - **Hit** — you struck a hull, but you are *not* told which one.
-   - **Destroyed** — that hit was the hull's last intact section, and that
-     individual craft is named. A single-section submarine is therefore
-     destroyed by the first hit that finds it.
+   - **Destroyed** — that hit was the hull's last intact section. The
+     individual craft is named, and its burnt-out hull is drawn on the
+     Invasion Grid beneath your hit marks, so you can see the craft you
+     killed. A single-section submarine is therefore destroyed by the first
+     hit that finds it.
 3. **The invader fires back** at one sector of your Home Grid, and the same
    three results apply.
 
@@ -130,10 +132,10 @@ Turn order strictly alternates. A hit does not earn a second shot, so both
 sides always have taken the same number of shots — which is what makes
 accuracy worth scoring.
 
-The portrait beside the grids shows whoever currently holds the guns: your
-captain while the shot is yours, the Kraal warlord while the invader takes its
-time over the reply. Destroy one of theirs and your captain punches the air;
-lose one of yours and the warlord laughs.
+Each grid carries its commander above it: your captain over the Home Grid, the
+Kraal warlord over the Invasion Grid. Whoever holds the guns is lit, and the
+waiting side sits in the dark. Destroy one of theirs and your captain punches
+the air; lose one of yours and the warlord laughs.
 
 `;
 }

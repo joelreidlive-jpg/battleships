@@ -18,6 +18,7 @@ import {
   shotProblem,
   statsFor,
   sunkHulls,
+  wreckage,
   validateFleet,
 } from '@bs/rules';
 import { chooseShot, randomFleet } from '@bs/ai';
@@ -222,6 +223,7 @@ export class MatchDO extends DurableObject<Env> {
     const meta = this.meta!;
     const state = this.state!;
     const finished = state.status === 'finished';
+    const alienSunk = sunkHulls(state.alien);
     return {
       matchId: meta.matchId,
       status: state.status,
@@ -235,7 +237,10 @@ export class MatchDO extends DurableObject<Env> {
       },
       offence: {
         shots: state.alien.shots.map(redactShot),
-        sunk: sunkHulls(state.alien),
+        sunk: alienSunk,
+        // Safe to send: the player's own marks already give away every cell of
+        // a hull they have destroyed.
+        wrecks: wreckage(state.alien),
       },
       ...(finished ? { alienFleet: state.alien.fleet as Placement[] } : {}),
       score: scoreFor(state, meta.difficulty),

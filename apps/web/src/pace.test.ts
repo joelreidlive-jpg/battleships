@@ -28,7 +28,7 @@ function view(partial: Partial<MatchView>): MatchView {
     difficulty: 'raider',
     createdAt: 0,
     defence: { fleet: [], shots: [], sunk: [] },
-    offence: { shots: [], sunk: [] },
+    offence: { shots: [], sunk: [], wrecks: [] },
     score: { total: 0 } as MatchView['score'],
     stats: { earth: stats({}), alien: stats({}) },
     log: [],

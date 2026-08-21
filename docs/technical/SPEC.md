@@ -371,7 +371,9 @@ import type {
  * The shape enforces the game's one secret: `defence` carries the player's own
  * hulls, `offence` carries only the results of the player's own shots, and the
  * invader's deployment appears in `alienFleet` exactly once — after the battle
- * has ended.
+ * has ended. A destroyed invader hull is the one exception: its position is
+ * already fully known from the player's own hit marks, so its wreck is sent
+ * back to be drawn.
  */
 
 export interface DefenceView {
@@ -385,6 +387,8 @@ export interface OffenceView {
   /** The player's own shots. A hull's identity appears only when it sinks. */
   readonly shots: readonly Shot[];
   readonly sunk: readonly HullId[];
+  /** Destroyed invader hulls, so the craft the player killed can be seen. */
+  readonly wrecks: readonly Placement[];
 }
 
 export interface LogEntry {
