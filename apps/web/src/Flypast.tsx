@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { LeaderboardResponse } from '@bs/protocol';
 import { Leaderboard } from './Leaderboard.js';
 import { Ship } from './Ship.js';
@@ -26,7 +26,11 @@ export function Flypast({ won, highScore, board, onDone }: FlypastProps) {
   const cuts = won || highScore;
   const [showBoard, setShowBoard] = useState(false);
 
+  // Once per curtain call: a remount must not stack a second verdict on the first.
+  const sounded = useRef(false);
   useEffect(() => {
+    if (sounded.current) return;
+    sounded.current = true;
     if (won) sound.playCheer();
     else sound.playAlienLaugh();
   }, [won]);

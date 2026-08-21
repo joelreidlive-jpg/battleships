@@ -52,8 +52,9 @@ export function App() {
 
   /**
    * One bang per side per exchange, plus the heavier callout when a hull dies
-   * and the warning when only one of ours is left. They are queued end to end
-   * from the length of each clip, so two voices never talk over each other.
+   * and the warning when only one of ours is left. Order is all that is set
+   * here: the sound channel holds each cue until the one before it has
+   * finished, across exchanges as well as within one.
    */
   const announce = (view: MatchView) => {
     const fresh = view.log.filter((entry) => entry.seq > heard.current);
@@ -64,22 +65,16 @@ export function App() {
       return entries.some((entry) => entry.outcome === 'hit') ? 'hit' : 'none';
     };
 
-    let at = 0;
-    const queue = (play: (afterMs: number) => void, lengthMs: number) => {
-      play(at);
-      at += lengthMs;
-    };
-
     const earth = outcome('earth');
-    if (earth === 'sunk') queue(sound.playAlienHullLost, 5200);
-    else if (earth === 'hit') queue(sound.playDirectHit, 3000);
+    if (earth === 'sunk') sound.playAlienHullLost();
+    else if (earth === 'hit') sound.playDirectHit();
 
     const alien = outcome('alien');
-    if (alien === 'sunk') queue(sound.playOwnHullLost, 5100);
-    else if (alien === 'hit') queue(sound.playIncomingHit, 3400);
+    if (alien === 'sunk') sound.playOwnHullLost();
+    else if (alien === 'hit') sound.playIncomingHit();
 
     const afloat = HULLS.length - view.defence.sunk.length;
-    if (alien === 'sunk' && afloat === 1 && view.status === 'playing') queue(sound.playLastHullWarning, 3400);
+    if (alien === 'sunk' && afloat === 1 && view.status === 'playing') sound.playLastHullWarning();
 
     if (earth === 'sunk') setReaction('cheer');
     else if (alien === 'sunk') setReaction('laugh');
