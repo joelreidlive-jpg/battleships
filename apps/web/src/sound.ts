@@ -52,7 +52,7 @@ const lastHull = new Rotation(LAST_HULL_CALLOUTS, chance);
  */
 const CLIP_MS: Readonly<Record<string, number>> = {
   'alien-laugh.mp3': 4362,
-  'crowd-hooray.mp3': 3527,
+  'crowd-hooray.mp3': 3056,
   'direct-hit.mp3': 722,
   'hit-2.mp3': 1489,
   'hit-3.mp3': 1750,
