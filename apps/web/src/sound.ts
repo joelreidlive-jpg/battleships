@@ -13,7 +13,16 @@
  * lazily on the first shot — by then the player has clicked a cell.
  */
 
+import {
+  ALIEN_LOSS_CALLOUTS,
+  HIT_CALLOUTS,
+  INCOMING_CALLOUTS,
+  LAST_HULL_CALLOUTS,
+  OWN_LOSS_CALLOUTS,
+  type Callout,
+} from './callouts.js';
 import { browserClock, Channel } from './channel.js';
+import { Rotation } from './rotation.js';
 
 const MUTE_KEY = 'bs.muted';
 /** Silence between two cues, so they read as separate lines. */
@@ -23,10 +32,19 @@ const BLAST_MS = 520;
 
 let context: AudioContext | null = null;
 let voices: SpeechSynthesisVoice[] = [];
-/** Where the rotation of hit callouts has got to, so a run of hits never repeats one. */
-let nextCallout = 0;
 const channel = new Channel(browserClock, GAP_MS);
 const clips = new Map<string, HTMLAudioElement>();
+
+// Which reading of each moment is heard is drawn fresh every time, so a
+// campaign never settles into a script. Nothing here decides the battle, so
+// the platform's own randomness is fine.
+// eslint-disable-next-line no-restricted-properties -- flavour only; play is decided on the server
+const chance = () => Math.random();
+const hits = new Rotation(HIT_CALLOUTS, chance);
+const alienLosses = new Rotation(ALIEN_LOSS_CALLOUTS, chance);
+const incoming = new Rotation(INCOMING_CALLOUTS, chance);
+const ownLosses = new Rotation(OWN_LOSS_CALLOUTS, chance);
+const lastHull = new Rotation(LAST_HULL_CALLOUTS, chance);
 
 /**
  * Measured lengths, used until the browser has the metadata. Being wrong here
@@ -35,14 +53,28 @@ const clips = new Map<string, HTMLAudioElement>();
 const CLIP_MS: Readonly<Record<string, number>> = {
   'alien-laugh.mp3': 4362,
   'crowd-hooray.mp3': 3527,
-  'direct-hit.mp3': 1045,
-  'hit-2.mp3': 1855,
-  'hit-3.mp3': 2038,
-  'hit-4.mp3': 1776,
-  'kraal-have-many.mp3': 4232,
-  'last-ship.mp3': 3318,
-  'ship-lost.mp3': 4153,
-  'we-will-destroy-you.mp3': 2586,
+  'direct-hit.mp3': 722,
+  'hit-2.mp3': 1489,
+  'hit-3.mp3': 1750,
+  'hit-4.mp3': 1463,
+  'hit-5.mp3': 2298,
+  'hit-6.mp3': 2820,
+  'hit-7.mp3': 1959,
+  'kraal-cannot-stop.mp3': 3606,
+  'kraal-earth-falls.mp3': 3554,
+  'kraal-have-many.mp3': 4493,
+  'kraal-lucky.mp3': 4519,
+  'kraal-numberless.mp3': 4023,
+  'kraal-ten-more.mp3': 4023,
+  'kraal-world-burns.mp3': 2977,
+  'last-ship-2.mp3': 3084,
+  'last-ship-3.mp3': 3319,
+  'last-ship.mp3': 3188,
+  'ship-lost-2.mp3': 3188,
+  'ship-lost-3.mp3': 3815,
+  'ship-lost-4.mp3': 3267,
+  'ship-lost.mp3': 3867,
+  'we-will-destroy-you.mp3': 1515,
 };
 
 export function muted(): boolean {
@@ -208,54 +240,51 @@ function callout(file: string, gain = 1): void {
 }
 
 /**
- * The bridge crew calling a hit. Consecutive hits step through the list rather
- * than repeating one line, so a long run of them still sounds like a crew.
- * Each has a pre-rendered clip for browsers with no British voice installed.
+ * Speak the crew's line where a British voice exists, and fall back to its
+ * pre-rendered clip where one does not.
  */
-const HIT_CALLOUTS: readonly { readonly line: string; readonly pitch: number; readonly clip: string }[] = [
-  { line: 'Direct hit!', pitch: 1.6, clip: 'direct-hit.mp3' },
-  { line: 'Target hit, Captain!', pitch: 1.3, clip: 'hit-2.mp3' },
-  { line: "That's a hit! Good shooting!", pitch: 1.75, clip: 'hit-3.mp3' },
-  { line: 'Solid hit on the invader!', pitch: 1.1, clip: 'hit-4.mp3' },
-];
-
-/** The player landed a shot: a bright blast and the next voice in the rotation. */
-export function playDirectHit(): void {
-  const line = HIT_CALLOUTS[nextCallout % HIT_CALLOUTS.length];
-  nextCallout += 1;
-  blast(0.5);
+function crew(line: Callout, gain: number): void {
   const voice = britishVoice();
   if (voice) enqueue(() => say(line.line, 1.25, line.pitch, voice), spokenLength(line.line, 1.25));
-  else callout(line.clip, 0.9);
+  else callout(line.clip, gain);
 }
 
-/** A fresh campaign: silence whatever is still sounding and start the rotation again. */
+/** The player landed a shot: a bright blast and whichever of the crew answers. */
+export function playDirectHit(): void {
+  blast(0.5);
+  crew(hits.next(), 0.9);
+}
+
+/** A fresh campaign: silence whatever is still sounding, and forget what was said. */
 export function resetCallouts(): void {
   silence();
-  nextCallout = 0;
+  for (const rotation of [hits, alienLosses, incoming, ownLosses, lastHull]) rotation.reset();
 }
 
-/** The player destroyed an invader hull: the Kraal are unimpressed. */
+/**
+ * The player destroyed an invader hull: the Kraal are unimpressed. Its lines
+ * are always the clip — no installed voice sounds like the Kraal.
+ */
 export function playAlienHullLost(): void {
   blast(0.6);
-  callout('kraal-have-many.mp3');
+  callout(alienLosses.next().clip);
 }
 
 /** The player lost a hull: the crew take it, and keep going. */
 export function playOwnHullLost(): void {
   blast(0.7);
-  callout('ship-lost.mp3');
+  crew(ownLosses.next(), 1);
 }
 
 /** One hull left. No blast — this rides on the one that just sank a ship. */
 export function playLastHullWarning(): void {
-  callout('last-ship.mp3');
+  crew(lastHull.next(), 1);
 }
 
 /** The invader landed a shot: a heavier blast and a slow, guttural threat. */
 export function playIncomingHit(): void {
   blast(0.65);
-  callout('we-will-destroy-you.mp3');
+  callout(incoming.next().clip);
 }
 
 /**
