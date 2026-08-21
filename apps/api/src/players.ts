@@ -25,7 +25,14 @@ interface PlayerRow {
 
 export async function loadProgress(db: D1Database, key: string): Promise<PlayerProgress> {
   const row = await db.prepare('SELECT progress FROM players WHERE id = ?').bind(key).first<PlayerRow>();
-  return row ? (JSON.parse(row.progress) as PlayerProgress) : EMPTY_PROGRESS;
+  if (!row) return EMPTY_PROGRESS;
+  try {
+    // A row written by an older or half-finished version must not take the
+    // career down with it; an unreadable record reads as a fresh one.
+    return JSON.parse(row.progress) as PlayerProgress;
+  } catch {
+    return EMPTY_PROGRESS;
+  }
 }
 
 export interface FinishedGame {

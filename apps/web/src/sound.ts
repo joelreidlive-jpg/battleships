@@ -187,6 +187,9 @@ function say(text: string, rate: number, pitch: number, voice: SpeechSynthesisVo
   utterance.voice = voice;
   utterance.lang = voice.lang;
   utterance.onend = release;
+  // A voice that fails or is cut short must free the channel too, or the cue
+  // behind it waits out a line that was never spoken.
+  utterance.onerror = release;
   // No cancel: the channel is already clear, and cancelling here is what used
   // to cut one callout off mid-word when the next exchange came in.
   synth.speak(utterance);

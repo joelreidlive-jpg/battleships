@@ -184,7 +184,20 @@ export class MatchDO extends DurableObject<Env> {
     return this.state;
   }
 
+  /**
+   * Write the finished campaign to D1. A failure here must not fail the shot
+   * that ended the battle: the game is already over and persisted, and losing
+   * a leaderboard row is cheaper than losing the victory screen.
+   */
   private async record(): Promise<void> {
+    try {
+      await this.write();
+    } catch (error) {
+      console.error('could not record the campaign', error);
+    }
+  }
+
+  private async write(): Promise<void> {
     const meta = this.meta!;
     if (meta.recorded) return;
     const state = this.state!;
