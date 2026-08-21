@@ -249,8 +249,11 @@ function Battle({ match, busy, starfleet, captain, reaction, onFire, onResign, o
         </section>
       ) : null}
 
-      <div className="boards">
+      <div className="portrait-row">
         <Portrait turn={match.turn} reaction={reaction} captain={captain} />
+      </div>
+
+      <div className="boards">
         <Board
           title="Invasion Grid"
           subtitle={finished ? 'Invader deployment revealed.' : 'Choose a cell to fire on.'}
