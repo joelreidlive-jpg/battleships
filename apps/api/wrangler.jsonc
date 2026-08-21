@@ -1,0 +1,45 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "battleships",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "observability": { "enabled": true },
+  // One Worker serves the API and the client, so there is no CORS surface and
+  // a deploy can never ship half of a change.
+  "assets": {
+    "directory": "../web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+  "vars": {
+    "APP_VERSION": "dev"
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "MATCH",
+        "class_name": "MatchDO"
+      }
+    ]
+  },
+  // SQLite-backed from the start: the storage backend cannot be changed later
+  // without migrating every live object.
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["MatchDO"]
+    }
+  ],
+  // A player's record outlives any one campaign, so it cannot live in a match
+  // Durable Object. Create the database with
+  //   wrangler d1 create battleships
+  // and paste the returned id here; local `wrangler dev` needs no id.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "battleships",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ]
+}
