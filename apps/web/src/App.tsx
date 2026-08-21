@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useState } from 'react';
-import { DIFFICULTIES, type Difficulty, HULLS, type Placement, TOTAL_SECTIONS, formatCell } from '@bs/rules';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  DIFFICULTIES,
+  type Difficulty,
+  HULLS,
+  type Placement,
+  type Side,
+  TOTAL_SECTIONS,
+  formatCell,
+} from '@bs/rules';
 import type { MatchView, ProgressResponse } from '@bs/protocol';
 import { Board } from './Board.js';
 import { Deploy } from './Deploy.js';
 import { Manual } from './Manual.js';
 import * as api from './api.js';
+import * as sound from './sound.js';
 
 const DIFFICULTY_LABEL: Record<Difficulty, { name: string; blurb: string }> = {
   scout: { name: 'Scout Wave', blurb: 'Unco-ordinated probing fire. Score x1.' },
@@ -19,6 +28,9 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [manual, setManual] = useState(false);
+  const [mute, setMute] = useState(sound.muted);
+  /** Log entries already sounded, so a re-render never replays an explosion. */
+  const heard = useRef(0);
 
   const refreshCareer = useCallback(() => {
     if (!api.playerToken()) return;
@@ -26,6 +38,17 @@ export function App() {
   }, []);
 
   useEffect(refreshCareer, [refreshCareer]);
+  useEffect(() => sound.primeVoices(), []);
+
+  /** One bang per side per exchange, sequenced so the two callouts never overlap. */
+  const announce = (view: MatchView) => {
+    const fresh = view.log.filter((entry) => entry.seq > heard.current);
+    heard.current = view.log.reduce((max, entry) => Math.max(max, entry.seq), heard.current);
+    const landed = (side: Side) =>
+      fresh.some((entry) => entry.side === side && (entry.outcome === 'hit' || entry.outcome === 'sunk'));
+    if (landed('earth')) sound.playDirectHit();
+    if (landed('alien')) sound.playIncomingHit(landed('earth') ? 2200 : 0);
+  };
 
   const run = async (action: () => Promise<MatchView>) => {
     setBusy(true);
@@ -33,6 +56,7 @@ export function App() {
     try {
       const view = await action();
       setMatch(view);
+      announce(view);
       if (view.status === 'finished') refreshCareer();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'the transmission failed');
@@ -41,7 +65,16 @@ export function App() {
     }
   };
 
-  const launch = (fleet: readonly Placement[] | undefined) => run(() => api.createMatch(difficulty, fleet));
+  const launch = (fleet: readonly Placement[] | undefined) => {
+    heard.current = 0;
+    return run(() => api.createMatch(difficulty, fleet));
+  };
+
+  const toggleMute = () => {
+    const next = !mute;
+    sound.setMuted(next);
+    setMute(next);
+  };
 
   return (
     <div className="shell">
@@ -58,6 +91,9 @@ export function App() {
               {career.progress.bestScore.toLocaleString()}
             </p>
           ) : null}
+          <button type="button" onClick={toggleMute} aria-pressed={mute}>
+            {mute ? 'Comms muted' : 'Comms live'}
+          </button>
           <button type="button" onClick={() => setManual(true)}>
             Field manual
           </button>
