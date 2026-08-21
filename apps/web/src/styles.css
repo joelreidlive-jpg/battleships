@@ -424,10 +424,11 @@ button.primary {
 }
 
 .roster__item {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 2px 10px;
-  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
   border-left: 5px solid var(--orange);
   background: rgba(74, 37, 17, 0.55);
   border-radius: 4px;
@@ -443,12 +444,10 @@ button.primary {
   box-shadow: inset 0 0 0 1px var(--gold);
 }
 
-.roster__name {
-  font-family: var(--display);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  color: var(--amber);
+.roster__ship {
+  height: 30px;
+  overflow: visible;
+  flex: none;
 }
 
 .roster__pips {
@@ -456,12 +455,6 @@ button.primary {
   letter-spacing: 3px;
 }
 
-.roster__blurb {
-  grid-column: 1 / -1;
-  font-size: 0.85rem;
-  color: var(--cream);
-  opacity: 0.85;
-}
 
 .statusbar {
   display: grid;
