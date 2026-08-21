@@ -1,5 +1,5 @@
 import { API_ROUTES } from '@bs/protocol';
-import { CELL_COUNT } from '@bs/rules';
+import { CELL_COUNT, HULLS } from '@bs/rules';
 
 /**
  * A machine-readable copy of the same route table the specification documents,
@@ -111,11 +111,11 @@ function schemas(): string[] {
   return [
     '    Placement:',
     '      type: object',
-    '      required: [ship, origin, orientation]',
+    '      required: [hull, origin, orientation]',
     '      properties:',
-    '        ship:',
+    '        hull:',
     '          type: string',
-    '          enum: [carrier, battlecruiser, cruiser, submersible, interceptor]',
+    `          enum: [${HULLS.map((hull) => hull.id).join(', ')}]`,
     '        origin:',
     '          type: integer',
     '          minimum: 0',
@@ -134,7 +134,7 @@ function schemas(): string[] {
     '        outcome:',
     '          type: string',
     '          enum: [miss, hit, sunk]',
-    '        ship:',
+    '        hull:',
     '          type: string',
     '          description: Present only when the outcome is sunk.',
     '    CreateMatchRequest:',

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { DIFFICULTIES, type Difficulty, type Placement, FLEET, formatCell } from '@bs/rules';
+import { DIFFICULTIES, type Difficulty, HULLS, type Placement, TOTAL_SECTIONS, formatCell } from '@bs/rules';
 import type { MatchView, ProgressResponse } from '@bs/protocol';
 import { Board } from './Board.js';
 import { Deploy } from './Deploy.js';
@@ -119,8 +119,8 @@ function Battle({ match, busy, onFire, onResign, onNewCampaign }: BattleProps) {
         <Stat label="Score" value={match.score.total.toLocaleString()} />
         <Stat label="Shots" value={String(match.stats.earth.shots)} />
         <Stat label="Accuracy" value={`${Math.round(match.stats.earth.accuracy * 100)}%`} />
-        <Stat label="Invader hulls" value={`${FLEET.length - match.offence.sunk.length} afloat`} />
-        <Stat label="Your hulls" value={`${FLEET.length - match.defence.sunk.length} afloat`} />
+        <Stat label="Invader hulls" value={`${HULLS.length - match.offence.sunk.length} afloat`} />
+        <Stat label="Your hulls" value={`${HULLS.length - match.defence.sunk.length} afloat`} />
       </section>
 
       {finished ? (
@@ -141,13 +141,16 @@ function Battle({ match, busy, onFire, onResign, onNewCampaign }: BattleProps) {
           {...(match.alienFleet ? { fleet: match.alienFleet } : {})}
           onFire={onFire}
           disabled={busy || finished}
+          side="alien"
+          sunk={match.offence.sunk}
         />
         <Board
           title="Home Grid"
-          subtitle={`Sections intact: ${match.stats.earth.sectionsRemaining}/17`}
+          subtitle={`Sections intact: ${match.stats.earth.sectionsRemaining}/${TOTAL_SECTIONS}`}
           shots={match.defence.shots}
           fleet={match.defence.fleet}
           disabled
+          sunk={match.defence.sunk}
         />
       </div>
 

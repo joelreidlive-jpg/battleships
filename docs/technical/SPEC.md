@@ -79,15 +79,26 @@ from one row to the next.
 
 ## 5. Fleet and deployment
 
-| Class id | Sections | Earth name | Alien name | Legal positions on an empty grid |
-| --- | --- | --- | --- | --- |
-| `carrier` | 5 | Orbital Carrier | Hive Dreadnought | 120 |
-| `battlecruiser` | 4 | Solar Battlecruiser | Devourer Cruiser | 140 |
-| `cruiser` | 3 | Ion Cruiser | Swarm Cruiser | 160 |
-| `submersible` | 3 | Void Submersible | Shadow Lurker | 160 |
-| `interceptor` | 2 | Nova Interceptor | Needle Skiff | 180 |
+| Class id | Hulls | Sections each | Earth name | Alien name | Legal positions on an empty grid |
+| --- | --- | --- | --- | --- | --- |
+| `battleship` | 1 | 4 | Solar Battleship | Hive Dreadnought | 140 |
+| `cruiser` | 2 | 3 | Ion Cruiser | Swarm Cruiser | 160 |
+| `destroyer` | 3 | 2 | Nova Destroyer | Needle Skiff | 180 |
+| `submarine` | 4 | 1 | Void Submarine | Shadow Lurker | 100 |
 
-Total 17 sections per side. A placement is `{ ship, origin, orientation }` where
+A class may be deployed more than once, so the unit of play is the *hull*, not
+the class. Hull ids are `${classId}-${ordinal}`, one-based in deployment
+order:
+
+```
+battleship-1, cruiser-1, cruiser-2, destroyer-1, destroyer-2, destroyer-3, submarine-1, submarine-2, submarine-3, submarine-4
+```
+
+A single-section hull has one legal position per cell rather than two: the two
+orientations are the same placement, and enumerating both would double its
+weight in the density map.
+
+Total 10 hulls, 20 sections per side. A placement is `{ hull, origin, orientation }` where
 `origin` is the westmost cell when horizontal and the northmost when vertical:
 
 ```
@@ -97,7 +108,7 @@ cells(placement) = [0 .. sections-1].map(i =>
 
 A whole deployment is legal when, and only when:
 
-1. every class appears exactly once;
+1. every hull appears exactly once;
 2. every hull fits inside the grid on its axis;
 3. no two hulls share a cell.
 
@@ -121,13 +132,14 @@ GameState {
   status: 'playing' | 'finished'
   winner?: 'earth' | 'alien'
 }
-Shot { cell, outcome: 'miss' | 'hit' | 'sunk', ship? }
+Shot { cell, outcome: 'miss' | 'hit' | 'sunk', hull? }
 ```
 
 Shots are recorded against the grid that was *fired at*, which is what makes a
-hull's damage a function of that grid alone: `damage(ship) = count(shots where
-shot.ship == ship)`, and a hull is destroyed when its damage reaches its
-section count.
+hull's damage a function of that grid alone: `damage(hull) = count(shots where
+shot.hull == hull)`, and a hull is destroyed when its damage reaches its
+section count. Damage is tracked per hull, not per class, so sinking one of the
+two cruisers says nothing about the other.
 
 Lifecycle:
 
@@ -157,12 +169,12 @@ fire(state, side, cell):
   reject if the defender's grid already has a shot at cell
 
   defender = other(side)
-  ship     = hull occupying cell on the defender's grid, if any
+  hull     = hull occupying cell on the defender's grid, if any
 
-  if no ship:            shot = { cell, 'miss' }
-  else if damage(ship) + 1 == sections(ship):
-                         shot = { cell, 'sunk', ship }
-  else:                  shot = { cell, 'hit',  ship }
+  if no hull:            shot = { cell, 'miss' }
+  else if damage(hull) + 1 == sections(hull):
+                         shot = { cell, 'sunk', hull }
+  else:                  shot = { cell, 'hit',  hull }
 
   append shot to the defender's grid
   if every defender hull is destroyed:
@@ -173,7 +185,7 @@ fire(state, side, cell):
 
 ### 6.2 Information redaction
 
-`Shot.ship` is recorded internally on every hit, because damage accounting
+`Shot.hull` is recorded internally on every hit, because damage accounting
 needs it, and stripped on the way out unless the outcome is `sunk`:
 
 ```
@@ -205,7 +217,7 @@ polite: it is given exactly the information the player is given.
 ```
 hits        = playerHits * 100
 sinks       = Σ sections(hull) * 60   over destroyed alien hulls
-wastedShots = max(0, playerShots - 17) * 10
+wastedShots = max(0, playerShots - 20) * 10
 accuracy    = won ? round(1000 * playerHits / playerShots) : 0
 survival    = won ? intactSectionsOfPlayerFleet * 200 : 0
 victory     = won ? 1000 : 0
@@ -222,11 +234,15 @@ Career ranks are awarded on lifetime total: Cadet (0), Flight Officer (5000), Sq
 
 ## 8. The opponent
 
-| Id | Name | Score multiplier | Mean shots to clear a fleet (300 games) |
-| --- | --- | --- | --- |
-| `scout` | Scout Wave | x1 | 95.3 |
-| `raider` | Raider Flight | x1.5 | 50.9 |
-| `overmind` | Overmind | x2 | 42.9 |
+| Id | Name | Score multiplier | Mean shots to clear a fleet (300 games) | Mean shots to the last multi-section hull |
+| --- | --- | --- | --- | --- |
+| `scout` | Scout Wave | x1 | 96.7 | 95.5 |
+| `raider` | Raider Flight | x1.5 | 85.6 | 66.4 |
+| `overmind` | Overmind | x2 | 85.5 | 50.3 |
+
+The second figure is the one to test against. Nothing can be inferred about a
+single-section hull, so hunting the four submarines is a uniform search that
+costs all three doctrines roughly the same and compresses the first figure.
 
 All three receive the same input — the redacted list of shots they have fired —
 and return one untried cell. No doctrine sees the defender's grid.
@@ -241,13 +257,13 @@ readIntel(shots):
       if miss: misses += cell; continue
       openHits += cell
       if outcome == 'sunk':
-          size = sections(shot.ship)
+          size = sections(shot.hull)
           claim the run of openHits through cell along one axis, length size
           move those cells from openHits to resolvedHits
-  remaining = classes not yet announced as sunk
+  remaining = hulls not yet announced as sunk
 ```
 
-A sinking announces the class but not the cells it occupied, so the run
+A sinking announces the hull but not the cells it occupied, so the run
 through the sinking cell is claimed for it. This is wrong only when two hulls
 were hit adjacently and in line, and the cost is one wasted probe.
 
@@ -273,8 +289,8 @@ first hit, and the step shrinks as hulls sink.
 **Overmind** — exact placement density.
 
 ```
-for each surviving hull class:
-    for each legal placement of that class:
+for each surviving hull:
+    for each legal placement of that hull:
         skip if it covers a miss or a resolved hit
         weight = 50 ^ (number of open hits it covers)
         add weight to every untried cell it covers
@@ -333,6 +349,7 @@ Embedded verbatim from `packages/protocol/src/wire.ts`.
 import type {
   Cell,
   Difficulty,
+  HullId,
   Placement,
   ScoreBreakdown,
   ShipClassId,
@@ -355,13 +372,13 @@ export interface DefenceView {
   readonly fleet: readonly Placement[];
   /** Shots the invader has fired at the player. */
   readonly shots: readonly Shot[];
-  readonly sunk: readonly ShipClassId[];
+  readonly sunk: readonly HullId[];
 }
 
 export interface OffenceView {
   /** The player's own shots. A hull's identity appears only when it sinks. */
   readonly shots: readonly Shot[];
-  readonly sunk: readonly ShipClassId[];
+  readonly sunk: readonly HullId[];
 }
 
 export interface LogEntry {
@@ -369,7 +386,7 @@ export interface LogEntry {
   readonly side: Side;
   readonly cell: Cell;
   readonly outcome: Shot['outcome'];
-  readonly ship?: ShipClassId;
+  readonly hull?: HullId;
   /** Pre-rendered so the transcript reads identically everywhere. */
   readonly text: string;
 }
@@ -448,6 +465,8 @@ export interface ReferenceResponse {
   readonly fleet: readonly {
     readonly id: ShipClassId;
     readonly sections: number;
+    /** How many hulls of this class each side deploys. */
+    readonly count: number;
     readonly earthName: string;
     readonly alienName: string;
     readonly blurb: string;
@@ -552,14 +571,15 @@ in the repository.
 3. A shot is refused out of turn, off the grid, or after the game ends.
 4. `sunk` is reported on, and only on, the shot that takes a hull's last
    section.
-5. The class of a struck hull is never disclosed before it sinks.
+5. The identity of a struck hull is never disclosed before it sinks.
 6. The game ends the instant a fleet loses its last hull, and the losing side
    does not reply.
 7. Any deployment that is incomplete, overlapping or off the grid is rejected,
    from client or server.
 8. A flawless campaign scores exactly `maximumScore(difficulty)`; the total is
    never negative.
-9. The doctrines are strictly ordered by mean shots to clear a fleet:
+9. The doctrines are strictly ordered by mean shots to destroy every
+   multi-section hull:
    Scout Wave > Raider Flight > Overmind.
 10. Every route Hono registers appears in `API_ROUTES`, and vice versa.
 

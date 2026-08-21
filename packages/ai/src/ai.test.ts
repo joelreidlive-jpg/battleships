@@ -6,11 +6,11 @@ import {
   cellAt,
   fleetCells,
   formatCell,
+  hullSections,
   isSunk,
   parseCell,
   placementCells,
   seededRng,
-  shipClass,
   validateFleet,
 } from '@bs/rules';
 import { randomFleet } from './deployment.js';
@@ -19,26 +19,34 @@ import { densityMap } from './density.js';
 import { chooseShot, targetCandidates } from './targeting.js';
 import { DOCTRINE_LIST } from './doctrine.js';
 
-/** Fire at a fleet until it is destroyed; return the number of shots taken. */
+/**
+ * Fire at a fleet until every hull of more than one section is destroyed, and
+ * return the number of shots taken.
+ *
+ * The four single-section submarines are excluded deliberately: nothing can be
+ * deduced about a one-cell hull, so hunting them is a uniform search that costs
+ * every doctrine the same and would drown the signal.
+ */
 function shotsToClear(fleet: Placement[], difficulty: Difficulty, seed: number): number {
   const rng = seededRng(seed);
   const cells = fleetCells(fleet);
   const shots: Shot[] = [];
   const damage = new Map<string, number>();
+  const large = [...new Set(cells.values())].filter((id) => hullSections(id) > 1);
 
   for (let n = 1; n <= 100; n++) {
     const cell = chooseShot(shots, difficulty, rng);
     expect(shots.some((shot) => shot.cell === cell)).toBe(false);
-    const ship = cells.get(cell);
-    if (!ship) {
+    const hull = cells.get(cell);
+    if (!hull) {
       shots.push({ cell, outcome: 'miss' });
       continue;
     }
-    const hits = (damage.get(ship) ?? 0) + 1;
-    damage.set(ship, hits);
-    const sunk = hits === shipClass(ship).sections;
-    shots.push(sunk ? { cell, outcome: 'sunk', ship } : { cell, outcome: 'hit' });
-    if ([...cells.values()].every((id) => (damage.get(id) ?? 0) === shipClass(id).sections)) return n;
+    const hits = (damage.get(hull) ?? 0) + 1;
+    damage.set(hull, hits);
+    const sunk = hits === hullSections(hull);
+    shots.push(sunk ? { cell, outcome: 'sunk', hull } : { cell, outcome: 'hit' });
+    if (large.every((id) => (damage.get(id) ?? 0) === hullSections(id))) return n;
   }
   throw new Error('the invader failed to clear the grid in 100 shots');
 }
@@ -68,11 +76,18 @@ describe('intel', () => {
   it('attributes a sunk hull to the run of hits that explains it', () => {
     const intel = readIntel([
       { cell: parseCell('C3'), outcome: 'hit' },
-      { cell: parseCell('D3'), outcome: 'sunk', ship: 'interceptor' },
+      { cell: parseCell('D3'), outcome: 'sunk', hull: 'destroyer-1' },
     ]);
     expect(intel.openHits).toEqual([]);
     expect(intel.resolvedHits.size).toBe(2);
-    expect(intel.remaining).not.toContain('interceptor');
+    expect(intel.remaining).not.toContain('destroyer-1');
+  });
+
+  it('retires only the hull that sank, not its sister ships', () => {
+    const intel = readIntel([{ cell: parseCell('C3'), outcome: 'sunk', hull: 'submarine-1' }]);
+    expect(intel.remaining).not.toContain('submarine-1');
+    expect(intel.remaining).toContain('submarine-2');
+    expect(intel.remaining).toHaveLength(9);
   });
 
   it('keeps hits on a hull that is still afloat', () => {
@@ -114,12 +129,17 @@ describe('targeting', () => {
   });
 
   it('ignores cells no surviving hull could occupy', () => {
-    // A lone untouched cell walled in by misses cannot hold even the 2-section
-    // skiff, so its density is zero and the Overmind will not waste a shot.
+    // A lone untouched cell walled in by misses can only hold a single-section
+    // submarine, so once all four are sunk its density is zero and the Overmind
+    // will not waste a shot on it.
     const walled = cellAt(0, 0);
     const shots: Shot[] = [
       { cell: cellAt(1, 0), outcome: 'miss' },
       { cell: cellAt(0, 1), outcome: 'miss' },
+      { cell: cellAt(5, 5), outcome: 'sunk', hull: 'submarine-1' },
+      { cell: cellAt(7, 7), outcome: 'sunk', hull: 'submarine-2' },
+      { cell: cellAt(9, 9), outcome: 'sunk', hull: 'submarine-3' },
+      { cell: cellAt(3, 8), outcome: 'sunk', hull: 'submarine-4' },
     ];
     expect(densityMap(readIntel(shots)).get(walled) ?? 0).toBe(0);
     const rng = seededRng(5);
@@ -144,27 +164,31 @@ describe('doctrines are ordered by strength', () => {
     expect(scout).toBeGreaterThan(raider);
     expect(raider).toBeGreaterThan(overmind);
     // Guard rails, so a regression that quietly breaks targeting is caught.
+    // Measured over 300 games by `pnpm bench`: 95.5 / 66.4 / 50.3.
     expect(scout).toBeGreaterThan(90);
-    expect(raider).toBeLessThan(60);
-    expect(overmind).toBeLessThan(50);
+    expect(raider).toBeLessThan(75);
+    expect(overmind).toBeLessThan(60);
   });
 });
 
 describe('a hull that sinks is off the board', () => {
   it('stops the shooter chasing a resolved hit', () => {
     const fleet: Placement[] = [
-      { ship: 'carrier', origin: cellAt(0, 0), orientation: 'horizontal' },
-      { ship: 'battlecruiser', origin: cellAt(0, 2), orientation: 'horizontal' },
-      { ship: 'cruiser', origin: cellAt(0, 4), orientation: 'horizontal' },
-      { ship: 'submersible', origin: cellAt(0, 6), orientation: 'horizontal' },
-      { ship: 'interceptor', origin: cellAt(0, 8), orientation: 'horizontal' },
+      { hull: 'battleship-1', origin: cellAt(0, 0), orientation: 'horizontal' },
+      { hull: 'cruiser-1', origin: cellAt(0, 2), orientation: 'horizontal' },
+      { hull: 'cruiser-2', origin: cellAt(0, 4), orientation: 'horizontal' },
+      { hull: 'destroyer-1', origin: cellAt(0, 6), orientation: 'horizontal' },
+      { hull: 'destroyer-2', origin: cellAt(0, 8), orientation: 'horizontal' },
     ];
-    const grid = { fleet, shots: placementCells(fleet[4]).map((cell, i, all) => ({
-      cell,
-      outcome: i === all.length - 1 ? ('sunk' as const) : ('hit' as const),
-      ship: 'interceptor' as const,
-    })) };
-    expect(isSunk(grid, 'interceptor')).toBe(true);
+    const grid = {
+      fleet,
+      shots: placementCells(fleet[3]).map((cell, i, all) => ({
+        cell,
+        outcome: i === all.length - 1 ? ('sunk' as const) : ('hit' as const),
+        hull: 'destroyer-1',
+      })),
+    };
+    expect(isSunk(grid, 'destroyer-1')).toBe(true);
     const intel = readIntel(grid.shots.map((shot) => (shot.outcome === 'sunk' ? shot : { cell: shot.cell, outcome: shot.outcome })));
     expect(intel.openHits).toEqual([]);
     expect(targetCandidates(intel)).toEqual([]);

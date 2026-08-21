@@ -279,10 +279,64 @@ button.primary {
   pointer-events: none;
 }
 
-.hull {
+.ship__body {
   fill: var(--brown);
   stroke: var(--amber);
   stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.ship__wing {
+  fill: var(--rust);
+  stroke: var(--amber);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.ship__glass {
+  fill: var(--teal);
+  stroke: var(--cream);
+  stroke-width: 1;
+}
+
+.ship__engine {
+  fill: var(--gold);
+}
+
+.ship__rib {
+  stroke: var(--amber);
+  stroke-width: 1;
+  opacity: 0.45;
+}
+
+/* The invasion fleet, shown once the battle is over, reads cold against the
+   defenders' orange. */
+.ship--alien .ship__body {
+  fill: #23383a;
+  stroke: var(--teal);
+}
+
+.ship--alien .ship__wing {
+  fill: #16292b;
+  stroke: var(--teal);
+}
+
+.ship--alien .ship__glass {
+  fill: var(--gold);
+  stroke: var(--cream);
+}
+
+.ship--sunk {
+  opacity: 0.45;
+}
+
+.ship--sunk .ship__body {
+  fill: #2a1408;
+  stroke: var(--danger);
+}
+
+.ship--sunk .ship__engine {
+  fill: var(--danger);
 }
 
 .grid--locked .cell rect {
@@ -310,6 +364,11 @@ button.primary {
 .roster__item--done {
   border-left-color: var(--teal);
   opacity: 0.6;
+}
+
+.roster__item--next {
+  border-left-color: var(--gold);
+  box-shadow: inset 0 0 0 1px var(--gold);
 }
 
 .roster__name {

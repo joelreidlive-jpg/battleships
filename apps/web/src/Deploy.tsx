@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
 import {
   type Cell,
-  FLEET,
+  HULLS,
+  type HullId,
   type Orientation,
   type Placement,
-  type ShipClassId,
   fitsOnGrid,
+  hullName,
+  hullSections,
   placementCells,
+  shipClass,
   validateFleet,
 } from '@bs/rules';
 import { Board } from './Board.js';
@@ -26,11 +29,12 @@ export function Deploy({ onLaunch, busy }: DeployProps) {
   const [orientation, setOrientation] = useState<Orientation>('horizontal');
   const [hover, setHover] = useState<Cell | null>(null);
 
-  const next: ShipClassId | undefined = FLEET.map((ship) => ship.id).find(
-    (id) => !placed.some((placement) => placement.ship === id),
+  const next: HullId | undefined = HULLS.map((hull) => hull.id).find(
+    (id) => !placed.some((placement) => placement.hull === id),
   );
 
-  const candidate: Placement | null = next !== undefined && hover !== null ? { ship: next, origin: hover, orientation } : null;
+  const candidate: Placement | null =
+    next !== undefined && hover !== null ? { hull: next, origin: hover, orientation } : null;
   const occupied = useMemo(() => new Set(placed.flatMap(placementCells)), [placed]);
   const legal =
     candidate !== null && fitsOnGrid(candidate) && placementCells(candidate).every((cell) => !occupied.has(cell));
@@ -41,7 +45,7 @@ export function Deploy({ onLaunch, busy }: DeployProps) {
     <div className="deploy">
       <Board
         title="Home Grid — deploy your fleet"
-        subtitle={next ? `Positioning the ${FLEET.find((ship) => ship.id === next)!.earthName}` : 'Fleet ready.'}
+        subtitle={next ? `Positioning the ${hullName(next, 'earth')}` : 'Fleet ready.'}
         shots={[]}
         fleet={placed}
         onFire={(cell) => {
@@ -55,13 +59,19 @@ export function Deploy({ onLaunch, busy }: DeployProps) {
       <div className="deploy__panel">
         <h2>Deployment orders</h2>
         <ol className="roster">
-          {FLEET.map((ship) => {
-            const done = placed.some((placement) => placement.ship === ship.id);
+          {HULLS.map((hull) => {
+            const done = placed.some((placement) => placement.hull === hull.id);
+            const current = hull.id === next;
             return (
-              <li key={ship.id} className={done ? 'roster__item roster__item--done' : 'roster__item'}>
-                <span className="roster__name">{ship.earthName}</span>
-                <span className="roster__pips">{'\u25A0'.repeat(ship.sections)}</span>
-                <span className="roster__blurb">{ship.blurb}</span>
+              <li
+                key={hull.id}
+                className={['roster__item', done ? 'roster__item--done' : '', current ? 'roster__item--next' : '']
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                <span className="roster__name">{hullName(hull.id, 'earth')}</span>
+                <span className="roster__pips">{'\u25A0'.repeat(hullSections(hull.id))}</span>
+                <span className="roster__blurb">{shipClass(hull.ship).blurb}</span>
               </li>
             );
           })}

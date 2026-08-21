@@ -175,11 +175,11 @@ components:
   schemas:
     Placement:
       type: object
-      required: [ship, origin, orientation]
+      required: [hull, origin, orientation]
       properties:
-        ship:
+        hull:
           type: string
-          enum: [carrier, battlecruiser, cruiser, submersible, interceptor]
+          enum: [battleship-1, cruiser-1, cruiser-2, destroyer-1, destroyer-2, destroyer-3, submarine-1, submarine-2, submarine-3, submarine-4]
         origin:
           type: integer
           minimum: 0
@@ -198,7 +198,7 @@ components:
         outcome:
           type: string
           enum: [miss, hit, sunk]
-        ship:
+        hull:
           type: string
           description: Present only when the outcome is sunk.
     CreateMatchRequest:

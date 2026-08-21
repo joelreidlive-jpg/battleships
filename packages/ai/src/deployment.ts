@@ -1,12 +1,4 @@
-import {
-  type Cell,
-  FLEET,
-  type Placement,
-  type Rng,
-  candidatePlacements,
-  pick,
-  placementCells,
-} from '@bs/rules';
+import { type Cell, HULLS, type Placement, type Rng, candidatePlacements, pick, placementCells } from '@bs/rules';
 
 /**
  * Deploy a fleet uniformly at random over legal, non-overlapping positions.
@@ -21,7 +13,7 @@ export function randomFleet(rng: Rng): Placement[] {
     const fleet = tryDeploy(rng);
     if (fleet) return fleet;
   }
-  // Unreachable in practice: five hulls on a 10x10 grid place first-try the
+  // Unreachable in practice: ten hulls on a 10x10 grid place first-try the
   // overwhelming majority of the time.
   throw new Error('could not deploy a fleet');
 }
@@ -31,8 +23,8 @@ function tryDeploy(rng: Rng): Placement[] | null {
   const fleet: Placement[] = [];
   // Largest hull first: it has the fewest legal positions, so placing it last
   // is what causes the retries.
-  for (const ship of [...FLEET].sort((a, b) => b.sections - a.sections)) {
-    const options = candidatePlacements(ship.id).filter((placement) =>
+  for (const hull of [...HULLS].sort((a, b) => b.sections - a.sections)) {
+    const options = candidatePlacements(hull.id).filter((placement) =>
       placementCells(placement).every((cell) => !used.has(cell)),
     );
     if (options.length === 0) return null;

@@ -28,18 +28,18 @@ row of the second column.
 
 ## The fleets
 
-Both sides field the same five hulls — the classic Battleship line-up — under
-different names.
+Both sides field the same 10 hulls under different names. Where a class is
+deployed more than once the individual craft are numbered — Ion Cruiser I and
+Ion Cruiser II — and each is positioned, damaged and destroyed separately.
 
-| Sections | Earth Defence Wing | Invasion Fleet | Notes |
-| --- | --- | --- | --- |
-| 5 | Orbital Carrier | Hive Dreadnought | Five sections of launch deck. The largest hull on either side and the slowest to hide. |
-| 4 | Solar Battlecruiser | Devourer Cruiser | Four sections. The main line of battle above the atmosphere. |
-| 3 | Ion Cruiser | Swarm Cruiser | Three sections of ion lance. Fast enough to reposition between waves. |
-| 3 | Void Submersible | Shadow Lurker | Three sections, running dark below the ecliptic. Same hull length as a cruiser. |
-| 2 | Nova Interceptor | Needle Skiff | Two sections. Small, quick, and the hull that decides most endgames. |
+| Count | Sections each | Earth Defence Wing | Invasion Fleet | Notes |
+| --- | --- | --- | --- | --- |
+| 1 | 4 | Solar Battleship | Hive Dreadnought | Four sections of armoured spine. The flagship, and the hardest hull to hide. |
+| 2 | 3 | Ion Cruiser | Swarm Cruiser | Three sections of ion lance. Fast enough to reposition between waves. |
+| 3 | 2 | Nova Destroyer | Needle Skiff | Two sections. Numerous, and the hull that decides most endgames. |
+| 4 | 1 | Void Submarine | Shadow Lurker | A single section running dark. Impossible to deduce, and found only by luck. |
 
-That is **17 sections** per side. A hull occupies that many adjacent sectors in a
+That is **10 hulls, 20 sections** per side. A hull occupies that many adjacent sectors in a
 straight line, north–south or east–west. Hulls may not overlap and may not run
 off the edge of the grid, but they *may* sit alongside one another — the
 standard rule, and one a careful player can use to hide a short hull against a
@@ -57,8 +57,9 @@ browser until the battle ends.
 2. The result is announced immediately:
    - **Miss** — nothing there.
    - **Hit** — you struck a hull, but you are *not* told which one.
-   - **Destroyed** — that hit was the hull's last intact section, and the class
-     is named.
+   - **Destroyed** — that hit was the hull's last intact section, and that
+     individual craft is named. A single-section submarine is therefore
+     destroyed by the first hit that finds it.
 3. **The invader fires back** at one sector of your Home Grid, and the same
    three results apply.
 
@@ -69,7 +70,7 @@ accuracy worth scoring.
 
 ## Winning
 
-The first side to destroy all 5 of the opponent's hulls — all 17 sections — wins
+The first side to destroy all 10 of the opponent's hulls — all 20 sections — wins
 immediately. Because you fire first, the invader does not get a reply to the
 shot that destroys its last hull.
 
@@ -85,34 +86,34 @@ three bonuses marked *on victory* are paid only if you win.
 | Line | Value | When |
 | --- | --- | --- |
 | Hit | 100 | Per section struck |
-| Hull destroyed | 60 x sections | When a hull is destroyed, so a 5-section hull pays 300 |
-| Wasted ordnance | -10 | Per shot beyond the 17 a flawless campaign needs |
+| Hull destroyed | 60 x sections | When a hull is destroyed, so a 4-section hull pays 240 |
+| Wasted ordnance | -10 | Per shot beyond the 20 a flawless campaign needs |
 | Accuracy bonus | 1000 x hit rate | On victory |
 | Fleet preserved | 200 | Per section of *your* fleet still intact, on victory |
 | Victory | 1000 | On victory |
 
 The subtotal is floored at zero, then multiplied by the doctrine multiplier
-below. A flawless campaign — 17 shots, 17 hits, nothing lost — against the
-hardest doctrine scores **16,240**, which is the highest score the game can
+below. A flawless campaign — 20 shots, 20 hits, nothing lost — against the
+hardest doctrine scores **18,400**, which is the highest score the game can
 produce.
 
 
 ### A worked example
 
 A campaign against **Raider Flight** in which you find every hull without a wasted
-shot, while the invader lands three hits on your Orbital Carrier:
+shot, while the invader lands three hits on your Solar Battleship:
 
 | Line | Score |
 | --- | --- |
-| Hits | 1,700 |
-| Hulls destroyed | 1,020 |
+| Hits | 2,000 |
+| Hulls destroyed | 1,200 |
 | Accuracy bonus | 1,000 |
-| Fleet preserved | 2,800 |
+| Fleet preserved | 3,400 |
 | Victory | 1,000 |
 | Wasted ordnance | 0 |
-| Subtotal | 7,520 |
+| Subtotal | 8,600 |
 | Doctrine multiplier | x1.5 |
-| **Total** | **11,280** |
+| **Total** | **12,900** |
 
 
 ## Invasion doctrines
@@ -120,15 +121,18 @@ shot, while the invader lands three hits on your Orbital Carrier:
 Difficulty is the invader's targeting doctrine. Nothing else changes: the
 grid, the fleets and the scoring are identical at every level.
 
-| Doctrine | Score multiplier | Mean shots to clear a fleet | How it aims |
-| --- | --- | --- | --- |
-| Scout Wave | x1 | 95.3 | Fires at a uniformly random cell it has not tried before, ignoring its own hits. |
-| Raider Flight | x1.5 | 50.9 | Sweeps cells on a diagonal whose spacing equals the smallest hull still afloat; on a hit, works outward along the axis the hits establish. |
-| Overmind | x2 | 42.9 | Counts, for every untried cell, how many placements of the surviving hulls are consistent with its shot history — weighting those that explain a known hit — and fires at the maximum. |
+| Doctrine | Score multiplier | Mean shots to clear a fleet | Mean shots to the last multi-section hull | How it aims |
+| --- | --- | --- | --- | --- |
+| Scout Wave | x1 | 96.7 | 95.5 | Fires at a uniformly random cell it has not tried before, ignoring its own hits. |
+| Raider Flight | x1.5 | 85.6 | 66.4 | Sweeps cells on a diagonal whose spacing equals the smallest hull still afloat; on a hit, works outward along the axis the hits establish. |
+| Overmind | x2 | 85.5 | 50.3 | Counts, for every untried cell, how many placements of the surviving hulls are consistent with its shot history — weighting those that explain a known hit — and fires at the maximum. |
 
-"Mean shots to clear a fleet" is measured over 300 simulated campaigns; 17 is
-perfect and 100 is the whole grid. It is the honest way to compare the three:
-Overmind needs roughly half the shots Scout Wave does.
+Both figures are measured over 300 simulated campaigns; 20 shots is perfect and
+100 is the whole grid. The second column is the fairer comparison: a
+single-section submarine leaves nothing to deduce, so the last four kills are a
+search that costs every doctrine about the same, which flattens the first
+column. On the hulls where skill applies, Overmind needs roughly half the
+shots Scout Wave does.
 
 
 ## Career

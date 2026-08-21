@@ -1,73 +1,123 @@
 /**
- * The fleet is the classic Battleship line-up — hulls of 5, 4, 3, 3 and 2
- * sections, seventeen sections in total — reskinned as spacecraft. The sizes
- * are the game's balance, so they are the part that does not get to change;
- * the names are theme.
+ * The fleet: one battleship of four sections, two cruisers of three, three
+ * destroyers of two and four submarines of one — twenty sections per side,
+ * reskinned as spacecraft. The sizes and counts are the game's balance, so
+ * they are the part that does not get to change; the names are theme.
+ *
+ * Because a class can be deployed more than once, hulls are identified
+ * individually: `cruiser-2` is a hull, `cruiser` is its class. Everything that
+ * has to tell two hulls apart — placement, damage, sinking — keys off the hull
+ * id, and only presentation looks up the class.
  */
 
-export type ShipClassId = 'carrier' | 'battlecruiser' | 'cruiser' | 'submersible' | 'interceptor';
+export type ShipClassId = 'battleship' | 'cruiser' | 'destroyer' | 'submarine';
 
 export interface ShipClass {
   readonly id: ShipClassId;
-  /** Hull length in grid cells. Classic Battleship sizes. */
+  /** Hull length in grid cells. */
   readonly sections: number;
+  /** How many hulls of this class each side deploys. */
+  readonly count: number;
   /** Name shown on the defender's (player's) grid. */
   readonly earthName: string;
-  /** Name shown for the same hull length in the invader's fleet. */
+  /** Name shown for the same hull in the invader's fleet. */
   readonly alienName: string;
   readonly blurb: string;
 }
 
 export const FLEET: readonly ShipClass[] = [
   {
-    id: 'carrier',
-    sections: 5,
-    earthName: 'Orbital Carrier',
-    alienName: 'Hive Dreadnought',
-    blurb: 'Five sections of launch deck. The largest hull on either side and the slowest to hide.',
-  },
-  {
-    id: 'battlecruiser',
+    id: 'battleship',
     sections: 4,
-    earthName: 'Solar Battlecruiser',
-    alienName: 'Devourer Cruiser',
-    blurb: 'Four sections. The main line of battle above the atmosphere.',
+    count: 1,
+    earthName: 'Solar Battleship',
+    alienName: 'Hive Dreadnought',
+    blurb: 'Four sections of armoured spine. The flagship, and the hardest hull to hide.',
   },
   {
     id: 'cruiser',
     sections: 3,
+    count: 2,
     earthName: 'Ion Cruiser',
     alienName: 'Swarm Cruiser',
     blurb: 'Three sections of ion lance. Fast enough to reposition between waves.',
   },
   {
-    id: 'submersible',
-    sections: 3,
-    earthName: 'Void Submersible',
-    alienName: 'Shadow Lurker',
-    blurb: 'Three sections, running dark below the ecliptic. Same hull length as a cruiser.',
+    id: 'destroyer',
+    sections: 2,
+    count: 3,
+    earthName: 'Nova Destroyer',
+    alienName: 'Needle Skiff',
+    blurb: 'Two sections. Numerous, and the hull that decides most endgames.',
   },
   {
-    id: 'interceptor',
-    sections: 2,
-    earthName: 'Nova Interceptor',
-    alienName: 'Needle Skiff',
-    blurb: 'Two sections. Small, quick, and the hull that decides most endgames.',
+    id: 'submarine',
+    sections: 1,
+    count: 4,
+    earthName: 'Void Submarine',
+    alienName: 'Shadow Lurker',
+    blurb: 'A single section running dark. Impossible to deduce, and found only by luck.',
   },
 ];
 
-/** 5 + 4 + 3 + 3 + 2 = 17, so 17 hits is a perfect game. */
-export const TOTAL_SECTIONS = FLEET.reduce((sum, ship) => sum + ship.sections, 0);
+/** A hull id, e.g. `battleship-1` or `cruiser-2`. */
+export type HullId = string;
 
-const BY_ID = new Map(FLEET.map((ship) => [ship.id, ship]));
+export interface Hull {
+  readonly id: HullId;
+  readonly ship: ShipClassId;
+  /** 1-based index within the class, for naming: Ion Cruiser II. */
+  readonly ordinal: number;
+  readonly sections: number;
+}
+
+/** Every hull a side deploys, largest class first. */
+export const HULLS: readonly Hull[] = FLEET.flatMap((ship) =>
+  Array.from({ length: ship.count }, (_, index) => ({
+    id: `${ship.id}-${index + 1}`,
+    ship: ship.id,
+    ordinal: index + 1,
+    sections: ship.sections,
+  })),
+);
+
+/** 4 + 2x3 + 3x2 + 4x1 = 20, so 20 hits is a perfect game. */
+export const TOTAL_SECTIONS = HULLS.reduce((sum, hull) => sum + hull.sections, 0);
+
+const CLASS_BY_ID = new Map(FLEET.map((ship) => [ship.id, ship]));
+const HULL_BY_ID = new Map(HULLS.map((hull) => [hull.id, hull]));
 
 export function shipClass(id: ShipClassId): ShipClass {
-  const ship = BY_ID.get(id);
+  const ship = CLASS_BY_ID.get(id);
   if (!ship) throw new RangeError(`unknown ship class "${id}"`);
   return ship;
 }
 
+export function hull(id: HullId): Hull {
+  const found = HULL_BY_ID.get(id);
+  if (!found) throw new RangeError(`unknown hull "${id}"`);
+  return found;
+}
+
+export function isHullId(value: unknown): value is HullId {
+  return typeof value === 'string' && HULL_BY_ID.has(value);
+}
+
+export function hullSections(id: HullId): number {
+  return hull(id).sections;
+}
+
 export type Side = 'earth' | 'alien';
+
+const NUMERALS = ['I', 'II', 'III', 'IV', 'V'];
+
+/** Display name for one hull, numbered when its class has siblings. */
+export function hullName(id: HullId, side: Side): string {
+  const { ship, ordinal } = hull(id);
+  const shipType = shipClass(ship);
+  const base = side === 'earth' ? shipType.earthName : shipType.alienName;
+  return shipType.count > 1 ? `${base} ${NUMERALS[ordinal - 1]}` : base;
+}
 
 export function shipName(id: ShipClassId, side: Side): string {
   const ship = shipClass(id);
