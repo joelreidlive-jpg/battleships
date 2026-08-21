@@ -54,6 +54,7 @@ pnpm dev:api        # Worker on :8787, with a local D1
 | `pnpm docs` | Regenerate the published documents |
 | `pnpm docs:check` | Fail if they are out of date (CI runs this) |
 | `pnpm bench` | Measure how many shots each doctrine needs to clear a fleet |
+| `pnpm audio` | Re-render the battle callouts (needs `espeak-ng` and `ffmpeg`) |
 
 Before the first `pnpm dev:api`, create the local database:
 

@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b && tsc --noEmit -p apps/api && tsc --noEmit -p apps/web",
     "lint": "eslint .",
+    "audio": "tsx tools/audio/render.ts",
     "bench": "tsx tools/bench.ts",
     "docs": "tsx tools/docgen/src/index.ts",
     "docs:check": "tsx tools/docgen/src/index.ts --check",
