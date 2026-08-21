@@ -16,7 +16,14 @@ export class MatchError extends Error {
   }
 }
 
-const TAGGED = /^\[(\d{3})\]\s([\s\S]*)$/;
+/**
+ * The tag, allowing for the prefix the runtime adds: a `MatchError` raised in
+ * the object arrives at the edge as an `Error` reading
+ * `MatchError: [404] campaign not found`, name and all. It is not accepted
+ * mid-sentence, so a fault that happens to quote a bracketed number stays
+ * withheld.
+ */
+const TAGGED = /(?:^|:\s)\[(\d{3})\]\s([\s\S]*)$/;
 
 export interface Failure {
   readonly status: number;

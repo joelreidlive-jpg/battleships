@@ -20,6 +20,15 @@ describe('what the client is told about a failure', () => {
     expect(failureFor(new Error(thrown.message))).toEqual({ status: 409, message: 'campaign already exists' });
   });
 
+  it('recovers the status the runtime prefixed with the class name', () => {
+    // Observed on the deployed Worker: the object's error reaches the edge as
+    // an `Error` whose message has been rebuilt from name and message both.
+    expect(failureFor(new Error('MatchError: [404] campaign not found'))).toEqual({
+      status: 404,
+      message: 'campaign not found',
+    });
+  });
+
   it('withholds anything that was not raised as a rejection', () => {
     expect(failureFor(new Error('D1_ERROR: no such table: leaderboard'))).toEqual({
       status: 500,
