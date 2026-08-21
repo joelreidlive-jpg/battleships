@@ -1,4 +1,6 @@
 import {
+  CELL_COUNT,
+  COLUMNS,
   type Cell,
   type Difficulty,
   type Rng,
@@ -54,17 +56,17 @@ export function targetCandidates(intel: Intel): Cell[] {
   const ends: Cell[] = [];
 
   for (const axis of ['horizontal', 'vertical'] as const) {
-    const step = axis === 'horizontal' ? 1 : 10;
+    const step = axis === 'horizontal' ? 1 : COLUMNS;
     const sameLine = (a: Cell, b: Cell) =>
       axis === 'horizontal' ? rowOf(a) === rowOf(b) : columnOf(a) === columnOf(b);
     for (const hit of intel.openHits) {
       const partner = hit + step;
-      if (partner > 99 || !sameLine(hit, partner) || !open.has(partner)) continue;
+      if (partner >= CELL_COUNT || !sameLine(hit, partner) || !open.has(partner)) continue;
       for (const direction of [-step, step]) {
         let cell = direction < 0 ? hit : partner;
         while (open.has(cell)) {
           const next = cell + direction;
-          if (next < 0 || next > 99 || !sameLine(cell, next)) break;
+          if (next < 0 || next >= CELL_COUNT || !sameLine(cell, next)) break;
           cell = next;
         }
         if (!intel.fired.has(cell) && sameLine(hit, cell)) ends.push(cell);

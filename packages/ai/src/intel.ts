@@ -1,4 +1,15 @@
-import { ALL_CELLS, type Cell, HULLS, type HullId, type Shot, columnOf, hullSections, rowOf } from '@bs/rules';
+import {
+  ALL_CELLS,
+  CELL_COUNT,
+  COLUMNS,
+  type Cell,
+  HULLS,
+  type HullId,
+  type Shot,
+  columnOf,
+  hullSections,
+  rowOf,
+} from '@bs/rules';
 
 /**
  * What a shooter can deduce from its own shot history alone. This is the only
@@ -69,12 +80,12 @@ function claimHull(cell: Cell, size: number, open: ReadonlySet<Cell>): Cell[] {
 }
 
 function runThrough(cell: Cell, size: number, open: ReadonlySet<Cell>, axis: 'horizontal' | 'vertical'): Cell[] {
-  const step = axis === 'horizontal' ? 1 : 10;
+  const step = axis === 'horizontal' ? 1 : COLUMNS;
   const sameLine = (a: Cell, b: Cell) => (axis === 'horizontal' ? rowOf(a) === rowOf(b) : columnOf(a) === columnOf(b));
   const run = [cell];
   for (const direction of [-step, step]) {
     let next = cell + direction;
-    while (run.length < size && next >= 0 && next < 100 && sameLine(cell, next) && open.has(next)) {
+    while (run.length < size && next >= 0 && next < CELL_COUNT && sameLine(cell, next) && open.has(next)) {
       run.push(next);
       next += direction;
     }

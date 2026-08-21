@@ -48,6 +48,8 @@ export function Markdown({ source }: { source: string }): ReactNode {
       }
       i--;
       const [header, ...body] = rows;
+      // A table with nothing but a rule is not a table.
+      if (!header) continue;
       blocks.push(
         <table key={i}>
           <thead>

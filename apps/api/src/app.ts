@@ -17,7 +17,7 @@ import type {
   ProgressResponse,
   ReferenceResponse,
 } from '@bs/protocol';
-import { MatchError } from './errors.js';
+import { MatchError, failureFor } from './errors.js';
 import type { MatchDO } from './match-do.js';
 import { loadProgress, newPlayerToken, playerKey, recentGames } from './players.js';
 import { board } from './leaderboard.js';
@@ -50,12 +50,10 @@ app.use('*', async (c, next) => {
 });
 
 app.onError((error, c) => {
-  if (error instanceof MatchError) return c.json({ error: error.message }, error.status as 400);
-  // A Durable Object rethrows on the calling side as a plain Error, so the
-  // status has to be recovered from the message rather than lost.
-  const message = error.message || 'internal error';
-  const status = /not found/.test(message) ? 404 : /not your/.test(message) ? 403 : 400;
-  return c.json({ error: message }, status);
+  const failure = failureFor(error);
+  // A fault, not a rejected request: keep it in the logs, not in the response.
+  if (failure.status >= 500) console.error('unhandled failure', error);
+  return c.json({ error: failure.message }, failure.status as 400);
 });
 
 app.post('/api/matches', async (c) => {
