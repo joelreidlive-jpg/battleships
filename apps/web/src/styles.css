@@ -201,6 +201,13 @@ button.primary {
   align-items: start;
 }
 
+.board header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .board header h2 {
   color: var(--orange);
   font-size: 1.1rem;
@@ -901,33 +908,45 @@ button.primary {
   }
 }
 
-/* Whoever holds the guns, painted. Sits clear above the grids' right corner. */
-.portrait-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 6px;
-}
-
+/* One commander over each grid, in the top-right of its header. */
 .portrait {
+  flex: 0 0 auto;
   margin: 0;
-  width: 132px;
+  width: 96px;
   text-align: center;
   pointer-events: none;
 }
 
 .portrait img {
-  width: 112px;
-  height: 112px;
+  width: 86px;
+  height: 86px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--amber);
+  border: 3px solid rgba(226, 163, 45, 0.4);
+  filter: saturate(0.7) brightness(0.8);
+  transition:
+    border-color 0.3s ease,
+    filter 0.3s ease;
+}
+
+/* The side to move is lit; the other waits in the dark. */
+.portrait--turn img {
+  border-color: var(--amber);
+  filter: none;
   box-shadow: 0 0 22px rgba(226, 163, 45, 0.35);
-  transition: border-color 0.3s ease;
 }
 
 .portrait--alien img {
+  border-color: rgba(111, 174, 159, 0.4);
+}
+
+.portrait--alien.portrait--turn img {
   border-color: #6fae9f;
   box-shadow: 0 0 22px rgba(111, 174, 159, 0.4);
+}
+
+.portrait--react img {
+  filter: none;
 }
 
 .portrait--react img {
@@ -936,7 +955,7 @@ button.primary {
 
 .portrait figcaption {
   margin-top: 4px;
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--cream);
