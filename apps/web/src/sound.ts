@@ -17,7 +17,7 @@ import {
   ALIEN_LOSS_CALLOUTS,
   HIT_CALLOUTS,
   INCOMING_CALLOUTS,
-  LAST_HULL_CALLOUTS,
+  LAST_SHIP_CALLOUTS,
   OWN_LOSS_CALLOUTS,
   type Callout,
 } from './callouts.js';
@@ -44,7 +44,7 @@ const hits = new Rotation(HIT_CALLOUTS, chance);
 const alienLosses = new Rotation(ALIEN_LOSS_CALLOUTS, chance);
 const incoming = new Rotation(INCOMING_CALLOUTS, chance);
 const ownLosses = new Rotation(OWN_LOSS_CALLOUTS, chance);
-const lastHull = new Rotation(LAST_HULL_CALLOUTS, chance);
+const lastShip = new Rotation(LAST_SHIP_CALLOUTS, chance);
 
 /**
  * Measured lengths, used until the browser has the metadata. Being wrong here
@@ -53,28 +53,52 @@ const lastHull = new Rotation(LAST_HULL_CALLOUTS, chance);
 const CLIP_MS: Readonly<Record<string, number>> = {
   'alien-laugh.mp3': 4362,
   'crowd-hooray.mp3': 3056,
-  'direct-hit.mp3': 722,
-  'hit-2.mp3': 1489,
-  'hit-3.mp3': 1750,
-  'hit-4.mp3': 1463,
-  'hit-5.mp3': 2298,
-  'hit-6.mp3': 2820,
-  'hit-7.mp3': 1959,
-  'kraal-cannot-stop.mp3': 3606,
-  'kraal-earth-falls.mp3': 3554,
-  'kraal-have-many.mp3': 4493,
-  'kraal-lucky.mp3': 4519,
-  'kraal-numberless.mp3': 4023,
-  'kraal-ten-more.mp3': 4023,
-  'kraal-world-burns.mp3': 2977,
-  'last-ship-2.mp3': 3084,
-  'last-ship-3.mp3': 3319,
-  'last-ship.mp3': 3188,
-  'ship-lost-2.mp3': 3188,
-  'ship-lost-3.mp3': 3815,
-  'ship-lost-4.mp3': 3267,
-  'ship-lost.mp3': 3867,
-  'we-will-destroy-you.mp3': 1515,
+  'direct-hit.mp3': 731,
+  'hit-2.mp3': 1515,
+  'hit-3.mp3': 1776,
+  'hit-4.mp3': 1489,
+  'hit-5.mp3': 2116,
+  'hit-6.mp3': 2847,
+  'hit-7.mp3': 1985,
+  'hit-8.mp3': 2586,
+  'hit-9.mp3': 2403,
+  'hit-10.mp3': 2351,
+  'hit-11.mp3': 2560,
+  'hit-12.mp3': 2116,
+  'kraal-amuse.mp3': 3840,
+  'kraal-ash.mp3': 3344,
+  'kraal-begun.mp3': 2638,
+  'kraal-cannot-stop.mp3': 3631,
+  'kraal-count.mp3': 4702,
+  'kraal-earth-falls.mp3': 3579,
+  'kraal-endless.mp3': 3709,
+  'kraal-feel-that.mp3': 4493,
+  'kraal-fodder.mp3': 4754,
+  'kraal-have-many.mp3': 4519,
+  'kraal-lucky.mp3': 4545,
+  'kraal-no-escape.mp3': 2612,
+  'kraal-numberless.mp3': 4127,
+  'kraal-scratch.mp3': 4232,
+  'kraal-spent.mp3': 4023,
+  'kraal-ten-more.mp3': 4049,
+  'kraal-void.mp3': 3605,
+  'kraal-weak.mp3': 4180,
+  'kraal-world-burns.mp3': 3004,
+  'last-ship.mp3': 3239,
+  'last-ship-2.mp3': 3109,
+  'last-ship-3.mp3': 3474,
+  'last-ship-4.mp3': 3135,
+  'last-ship-5.mp3': 2978,
+  'last-ship-6.mp3': 3553,
+  'ship-lost.mp3': 3918,
+  'ship-lost-2.mp3': 3213,
+  'ship-lost-3.mp3': 3866,
+  'ship-lost-4.mp3': 3318,
+  'ship-lost-5.mp3': 3814,
+  'ship-lost-6.mp3': 3944,
+  'ship-lost-7.mp3': 3422,
+  'ship-lost-8.mp3': 3187,
+  'we-will-destroy-you.mp3': 1541,
 };
 
 export function muted(): boolean {
@@ -258,7 +282,7 @@ export function playDirectHit(): void {
 /** A fresh campaign: silence whatever is still sounding, and forget what was said. */
 export function resetCallouts(): void {
   silence();
-  for (const rotation of [hits, alienLosses, incoming, ownLosses, lastHull]) rotation.reset();
+  for (const rotation of [hits, alienLosses, incoming, ownLosses, lastShip]) rotation.reset();
 }
 
 /**
@@ -278,7 +302,7 @@ export function playOwnHullLost(): void {
 
 /** One hull left. No blast — this rides on the one that just sank a ship. */
 export function playLastHullWarning(): void {
-  crew(lastHull.next(), 1);
+  crew(lastShip.next(), 1);
 }
 
 /** The invader landed a shot: a heavier blast and a slow, guttural threat. */
