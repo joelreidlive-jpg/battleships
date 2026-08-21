@@ -193,17 +193,19 @@ export function App() {
 
       {manual ? <Manual onClose={() => setManual(false)} /> : null}
 
-      <footer className="scoreline">
-        <span>
-          Score <strong>{(match?.score.total ?? 0).toLocaleString()}</strong>
-        </span>
-        <span>
-          Hi-score{' '}
-          <strong>
-            {Math.max(career?.progress.bestScore ?? 0, match?.score.total ?? 0).toLocaleString()}
-          </strong>
-        </span>
-      </footer>
+      {match === null ? null : (
+        <footer className="scoreline">
+          <span>
+            Score <strong>{match.score.total.toLocaleString()}</strong>
+          </span>
+          <span>
+            Hi-score{' '}
+            <strong>
+              {Math.max(career?.progress.bestScore ?? 0, match.score.total).toLocaleString()}
+            </strong>
+          </span>
+        </footer>
+      )}
     </div>
   );
 }
