@@ -23,6 +23,9 @@ import * as sound from './sound.js';
 /** How long a raised fist or a laugh holds before the portrait settles. */
 const REACTION_MS = 3200;
 
+/** Exchanges kept on screen: enough to read the last volley, no more. */
+const LOG_LINES = 3;
+
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 export function App() {
@@ -132,7 +135,7 @@ export function App() {
   };
 
   return (
-    <div className="shell">
+    <div className={match === null ? 'shell' : 'shell shell--campaign'}>
       <div className="scanlines" aria-hidden="true" />
       <header className="masthead">
         <div>
@@ -143,6 +146,7 @@ export function App() {
               : STRAPLINE}
           </p>
         </div>
+        {match === null ? null : <TransmissionLog match={match} />}
         <div className="masthead__right">
           {career ? (
             <p className="career">
@@ -175,6 +179,7 @@ export function App() {
           match={match}
           busy={busy}
           captain={commission.captain}
+          hiScore={Math.max(career?.progress.bestScore ?? 0, match.score.total)}
           reaction={reaction}
           onFire={(cell) => run(() => api.fire(match.matchId, cell))}
           onResign={() => run(() => api.resign(match.matchId))}
@@ -192,21 +197,27 @@ export function App() {
       )}
 
       {manual ? <Manual onClose={() => setManual(false)} /> : null}
-
-      {match === null ? null : (
-        <footer className="scoreline">
-          <span>
-            Score <strong>{match.score.total.toLocaleString()}</strong>
-          </span>
-          <span>
-            Hi-score{' '}
-            <strong>
-              {Math.max(career?.progress.bestScore ?? 0, match.score.total).toLocaleString()}
-            </strong>
-          </span>
-        </footer>
-      )}
     </div>
+  );
+}
+
+/** The last few exchanges, in the masthead so a campaign holds one screen. */
+function TransmissionLog({ match }: { match: MatchView }) {
+  return (
+    <section className="log">
+      <h2>Transmission log</h2>
+      <ol>
+        {[...match.log]
+          .reverse()
+          .slice(0, LOG_LINES)
+          .map((entry) => (
+            <li key={entry.seq} className={`log__${entry.side}`}>
+              <span className="log__ref">{entry.cell >= 0 ? formatCell(entry.cell) : '--'}</span>
+              {entry.text}
+            </li>
+          ))}
+      </ol>
+    </section>
   );
 }
 
@@ -214,13 +225,23 @@ interface BattleProps {
   readonly match: MatchView;
   readonly busy: boolean;
   readonly captain: string;
+  readonly hiScore: number;
   readonly reaction: Reaction;
   readonly onFire: (cell: number) => void;
   readonly onResign: () => void;
   readonly onNewCampaign: () => void;
 }
 
-function Battle({ match, busy, captain, reaction, onFire, onResign, onNewCampaign }: BattleProps) {
+function Battle({
+  match,
+  busy,
+  captain,
+  hiScore,
+  reaction,
+  onFire,
+  onResign,
+  onNewCampaign,
+}: BattleProps) {
   const finished = match.status === 'finished';
   const won = match.winner === 'earth';
 
@@ -274,31 +295,17 @@ function Battle({ match, busy, captain, reaction, onFire, onResign, onNewCampaig
       </div>
 
       <section className="statusbar">
+        <Stat label="Hi score" value={hiScore.toLocaleString()} />
         <Stat label="Score" value={match.score.total.toLocaleString()} />
         <Stat label="Shots" value={String(match.stats.earth.shots)} />
         <Stat label="Accuracy" value={`${Math.round(match.stats.earth.accuracy * 100)}%`} />
         <Stat label="Invader ships" value={`${HULLS.length - match.offence.sunk.length} afloat`} />
         <Stat label="Your ships" value={`${HULLS.length - match.defence.sunk.length} afloat`} />
-      </section>
-
-      <section className="log">
-        <h2>Transmission log</h2>
-        <ol>
-          {[...match.log]
-            .reverse()
-            .slice(0, 40)
-            .map((entry) => (
-              <li key={entry.seq} className={`log__${entry.side}`}>
-                <span className="log__ref">{entry.cell >= 0 ? formatCell(entry.cell) : '--'}</span>
-                {entry.text}
-              </li>
-            ))}
-        </ol>
-        {!finished ? (
-          <button type="button" onClick={onResign} disabled={busy}>
+        {finished ? null : (
+          <button type="button" className="statusbar__resign" onClick={onResign} disabled={busy}>
             Abandon defence
           </button>
-        ) : null}
+        )}
       </section>
     </>
   );

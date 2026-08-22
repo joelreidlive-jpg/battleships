@@ -44,6 +44,138 @@ body {
   position: relative;
 }
 
+/*
+ * A campaign is played on one screen, whatever the screen: the shell is the
+ * viewport, and the grids take whatever height the masthead and the stat bar
+ * leave them, keeping their square aspect as they shrink.
+ */
+.shell--campaign {
+  height: 100dvh;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 10px;
+  overflow: hidden;
+}
+
+.shell--campaign .masthead {
+  padding-bottom: 8px;
+  margin-bottom: 0;
+  border-bottom-width: 4px;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+.shell--campaign h1 {
+  font-size: clamp(1.1rem, 2.4vw, 2rem);
+  margin-bottom: 2px;
+}
+
+.shell--campaign .boards {
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 16px;
+}
+
+.shell--campaign .board {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.shell--campaign .grid {
+  min-height: 0;
+  flex: 1 1 auto;
+  width: auto;
+  max-width: 100%;
+  align-self: center;
+}
+
+.shell--campaign .board header {
+  flex: 0 0 auto;
+}
+
+.shell--campaign .board header h2 {
+  font-size: clamp(0.75rem, 1.4vw, 1.1rem);
+  margin-bottom: 2px;
+}
+
+.shell--campaign .board header p {
+  font-size: 0.78rem;
+  margin-bottom: 4px;
+}
+
+.shell--campaign .portrait img {
+  width: clamp(44px, 6vh, 64px);
+  height: clamp(44px, 6vh, 64px);
+}
+
+.shell--campaign .statusbar {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+/* The verdict shares the screen with the grids: its table scrolls, not it. */
+.shell--campaign .verdict {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  max-height: 34vh;
+  overflow: hidden;
+}
+
+/* Two columns of figures, so the whole tally fits beside the grids. */
+.shell--campaign .verdict .score {
+  display: block;
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  font-size: 0.76rem;
+}
+
+.shell--campaign .verdict .score tbody {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 32px;
+}
+
+.shell--campaign .verdict .score tr {
+  display: flex;
+  justify-content: space-between;
+}
+
+.shell--campaign .verdict .score td,
+.shell--campaign .verdict .score th {
+  padding: 1px 8px;
+}
+
+.shell--campaign .verdict h2 {
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+/* Too narrow to stand the grids side by side: stack them and let it scroll. */
+@media (max-width: 860px) {
+  .shell--campaign {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .shell--campaign .masthead {
+    flex-wrap: wrap;
+  }
+
+  .shell--campaign .log {
+    max-width: none;
+    margin-left: 0;
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+
 /* CRT wash. Pointer-events off so it never intercepts a shot. */
 .scanlines {
   position: fixed;
@@ -96,6 +228,7 @@ h1 {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 0 0 auto;
 }
 
 .career {
@@ -471,9 +604,25 @@ button.primary {
 
 .statusbar {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) auto;
+  align-items: stretch;
+  gap: 8px;
   margin: 16px 0 20px;
+}
+
+.statusbar__resign {
+  align-self: center;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .statusbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .statusbar__resign {
+    grid-column: span 3;
+  }
 }
 
 .stat {
@@ -540,22 +689,33 @@ button.primary {
   font-size: 1.15rem;
 }
 
+/* The log rides in the masthead, where the space above the grids was empty. */
 .log {
-  margin-top: 24px;
+  flex: 1 1 300px;
+  min-width: 0;
+  max-width: 520px;
+  margin: 0 0 0 auto;
+}
+
+.log h2 {
+  font-size: 0.72rem;
+  margin: 0 0 4px;
+  color: var(--orange);
 }
 
 .log ol {
   list-style: none;
   padding: 0;
-  margin: 0 0 12px;
-  max-height: 240px;
-  overflow-y: auto;
+  margin: 0;
   border-left: 4px solid var(--brown-light);
 }
 
 .log li {
-  padding: 5px 10px;
-  font-size: 0.92rem;
+  padding: 2px 8px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .log__earth {
@@ -975,28 +1135,6 @@ button.primary {
   100% {
     transform: scale(1) rotate(0deg);
   }
-}
-
-/* Score line, under the grids. */
-.scoreline {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  margin-top: 18px;
-  padding: 10px 16px;
-  background: linear-gradient(to top, rgba(12, 6, 3, 0.96), rgba(74, 37, 17, 0.9));
-  border-top: 3px solid var(--orange);
-  border-bottom: 3px solid var(--orange);
-  font-family: var(--display);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-size: 0.82rem;
-  color: var(--cream);
-}
-
-.scoreline strong {
-  color: var(--gold);
-  font-size: 1.05rem;
 }
 
 /* The board the flypast cuts to. */
