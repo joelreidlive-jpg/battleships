@@ -5,10 +5,44 @@ Audited at: `ca94ef8` (main, the merged state of PR #26)
 Scope: every source file in the monorepo — rules, AI, Worker/Durable Object, D1 access, protocol,
 React client, audio, CI/CD workflows and the generated documentation.
 Date: 21 August 2026
+Deployed: Worker version `audit-3`
 
 This is the living audit report. It carries the first pass (PRs #19 and #20, both merged and
 deployed) and a second pass run against the current main, which found five further defects, all
 fixed here.
+
+---
+
+## 0. Summary — the whole report in one page
+
+Thirteen defects were found across two deliberate audit passes, and all thirteen are fixed and
+merged. Every non-cosmetic fix carries a regression test, so none can come back quietly.
+
+| # | Bug | What went wrong | Fix | Severity |
+| --- | --- | --- | --- | --- |
+| 1 | Faults reported as bad requests | Any internal error came back as `400` carrying the internal message — a D1 failure told the browser which table was missing | Rejections are tagged with their status; anything else is a `500` with the details withheld | high |
+| 2 | A won campaign could vanish | If the final write to the database failed, the exception escaped and the player lost the victory screen they had just earned | The write is attempted, logged if it fails, and never allowed to erase the finished view | high |
+| 3 | Corrupt career row took down a page | One malformed row broke the whole career endpoint | Malformed data falls back to an empty career | medium |
+| 4 | Deploys could outrun the schema | The Worker could go live before its database migrations | Migrations run before the deploy | medium |
+| 5 | Field Manual could crash | A Markdown table with no header row crashed the in-game renderer | The renderer skips it | low |
+| 6 | A dropped voice line jammed the audio | If speech failed, the queue was never released and later callouts fell silent | Failure releases the channel, as finishing does | low |
+| 7 | Board size hard-coded in the AI | Targeting assumed a 10×10 grid in literals | The grid constants are used throughout | low |
+| 8 | Status lost crossing the runtime | The runtime rebuilds an error message with the class name in front, which defeated the tag matching added in #1 — every rejection became a `500` | Matching allows the prefix | medium |
+| 9 | Your row highlighted many times | The leaderboard marked *every* campaign you had posted, so the end-of-game board lit up in several places and scrolled to the wrong one | Only your best row is marked | medium |
+| 10 | A fault could set the HTTP status | Statuses travel inside the error text, and any three digits were believed — a fault reading `[999] retry later` produced an impossible response and a second failure | Only real statuses (400–599) are believed | medium |
+| 11 | No fleet deployment on a touch screen | Placement was decided by the *hovered* cell, and touch has no hover, so every tap was ignored | The cell actually chosen decides the placement | medium |
+| 12 | A malformed deployment looked like a crash | Bad JSON posted to the API threw, and came back as a server fault rather than a rejected request | Rejected with `400` and a reason | low |
+| 13 | The board could not be played by keyboard | Firing was mouse-only, so the one control that plays the game was unreachable | Cells are focusable and fire on Enter or Space | low |
+
+Also checked and found correct, so no change was made: shot resolution and scoring invariants
+(120 simulated campaigns, no invariant broken), the secrecy of the invader's fleet, the information
+the AI is allowed to see, campaign concurrency, token storage, leaderboard ranking, the pacing that
+holds the invader's reply, audio ordering, and documentation drift.
+
+Not verified, and honest about it: audio has never been judged by ear from the build machine, and
+the touch fix has not been run on a physical device.
+
+The detail behind every line of this table follows.
 
 ---
 
@@ -162,8 +196,8 @@ disclosed mid-campaign, and both the career and the shared board recorded.
   are not.
 - **The touch-deployment fix (2.3) has not been exercised on a real touch device**; it is reasoned
   from the event model and verified with a pointer.
-- **No live re-deploy accompanies this pass.** The fixes are on a branch and verified locally; the
-  live URL still runs the previous build until it is deployed.
+- **The live Worker now runs these fixes** (version `audit-3`); the report is kept in step with what
+  is deployed.
 - Nothing in this pass changes gameplay: fleet, grid, turn order, scoring and doctrine behaviour are
   untouched, and the doctrine-strength test still orders the three AIs as before.
 
