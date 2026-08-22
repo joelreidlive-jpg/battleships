@@ -103,6 +103,12 @@ describe('placement', () => {
     expect(validateFleet(touching)).toBeNull();
   });
 
+  it('rejects an order that is not a placement at all', () => {
+    // A deployment posted to the API is untrusted JSON, not a Placement.
+    const rubbish = [null, ...EARTH_FLEET.slice(1)] as unknown as Placement[];
+    expect(validateFleet(rubbish)).toMatch(/not a placement/);
+  });
+
   it('enumerates every legal position for a hull', () => {
     // A 4-cell hull has 7 origins per row and 7 per column, both axes.
     expect(candidatePlacements('battleship-1')).toHaveLength(140);

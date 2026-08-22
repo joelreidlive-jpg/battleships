@@ -101,6 +101,18 @@ export function Board({
                 .filter(Boolean)
                 .join(' ')}
               onClick={interactive ? () => onFire?.(cell) : undefined}
+              // A cell is an order, so it has to be reachable from the keyboard too.
+              tabIndex={interactive ? 0 : undefined}
+              onKeyDown={
+                interactive
+                  ? (event) => {
+                      if (event.key !== 'Enter' && event.key !== ' ') return;
+                      event.preventDefault();
+                      onFire?.(cell);
+                    }
+                  : undefined
+              }
+              onFocus={interactive ? () => onHover?.(cell) : undefined}
               onMouseEnter={() => onHover?.(cell)}
               role="gridcell"
               aria-label={`${formatCell(cell)}${shot ? ` ${shot.outcome}` : ''}`}

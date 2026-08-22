@@ -36,6 +36,15 @@ describe('what the client is told about a failure', () => {
     });
   });
 
+  it('withholds a tag naming a status a response cannot carry', () => {
+    // A fault whose text happens to end in a bracketed number must not become
+    // the response status, which would throw when the response is built.
+    expect(failureFor(new Error('KV read failed: [999] retry later'))).toEqual({
+      status: 500,
+      message: 'the defence grid is offline',
+    });
+  });
+
   it('withholds a thrown non-error too', () => {
     expect(failureFor('boom').status).toBe(500);
   });

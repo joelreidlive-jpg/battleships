@@ -40,6 +40,8 @@ export function fitsOnGrid(placement: Placement): boolean {
 export function validateFleet(placements: readonly Placement[]): string | null {
   const seen = new Set<HullId>();
   for (const placement of placements) {
+    // The deployment arrives over the wire, so an entry need not be an object.
+    if (placement === null || typeof placement !== 'object') return 'a deployment order is not a placement';
     if (!isHullId(placement.hull)) return `unknown hull "${placement.hull}"`;
     if (seen.has(placement.hull)) return `${hullName(placement.hull, 'earth')} is deployed twice`;
     seen.add(placement.hull);

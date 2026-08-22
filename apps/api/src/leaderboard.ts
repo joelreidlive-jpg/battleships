@@ -44,6 +44,10 @@ interface BoardRow {
  * The top of the board, highest score first, ties broken by who got there
  * first. `playerId` is optional: the board is public, and a caller without a
  * token simply has no row marked as theirs.
+ *
+ * A captain who has posted several campaigns owns several rows; only their
+ * best is marked, because the mark is what the board scrolls to and what the
+ * player reads as "this is where I am".
  */
 export async function board(db: D1Database, playerId?: string): Promise<LeaderboardResponse> {
   const { results } = await db
@@ -54,9 +58,8 @@ export async function board(db: D1Database, playerId?: string): Promise<Leaderbo
     .bind(BOARD_SIZE)
     .all<BoardRow>();
 
-  const entries: LeaderboardEntry[] = results.map((row, index) =>
-    toEntry(row, index + 1, playerId !== undefined && row.player_id === playerId),
-  );
+  const best = playerId === undefined ? -1 : results.findIndex((row) => row.player_id === playerId);
+  const entries: LeaderboardEntry[] = results.map((row, index) => toEntry(row, index + 1, index === best));
 
   const shown = entries.find((entry) => entry.you);
   if (shown) return { entries, yourRank: shown.rank };
