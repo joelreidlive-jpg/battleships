@@ -215,7 +215,7 @@ h3 {
 }
 
 h1 {
-  font-size: 2.5rem;
+  font-size: clamp(1.6rem, 7vw, 2.5rem);
   color: var(--amber);
   text-shadow: 3px 3px 0 var(--rust);
 }
@@ -302,7 +302,7 @@ button.primary {
 
 .doctrines {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 12px;
 }
 
@@ -339,10 +339,12 @@ button.primary {
   color: var(--void);
 }
 
+/* min() so a phone narrower than the track gets one column, not a sideways
+   scroll. */
 .deploy,
 .boards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
   gap: 24px;
   align-items: start;
 }
@@ -661,6 +663,22 @@ button.primary {
   color: var(--cream);
 }
 
+/* A phone: the figures shrink rather than wrap the bar into six deep cells. */
+@media (max-width: 560px) {
+  .stat {
+    padding: 8px 10px;
+  }
+
+  .stat__label {
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+  }
+
+  .stat__value {
+    font-size: 1.15rem;
+  }
+}
+
 .verdict {
   border: 3px solid var(--amber);
   border-radius: 12px;
@@ -877,13 +895,13 @@ button.primary {
   margin: 0 0 20px;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr));
   gap: 12px;
 }
 
 .brief__ship {
   display: grid;
-  grid-template-columns: 140px 1fr;
+  grid-template-columns: minmax(0, 140px) minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   padding: 10px 12px;
