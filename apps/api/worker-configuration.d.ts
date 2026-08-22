@@ -5,6 +5,7 @@
 declare namespace Cloudflare {
   interface Env {
     MATCH: DurableObjectNamespace<import('./src/match-do.js').MatchDO>;
+    RATE_LIMIT: DurableObjectNamespace<import('./src/rate-limit-do.js').RateLimiterDO>;
     DB: D1Database;
     ASSETS: Fetcher;
     /** Injected at deploy time from the release tag. */

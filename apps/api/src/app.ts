@@ -21,6 +21,7 @@ import { MatchError, failureFor } from './errors.js';
 import type { MatchDO } from './match-do.js';
 import { loadProgress, newPlayerToken, playerKey, recentGames } from './players.js';
 import { board } from './leaderboard.js';
+import { guardCreation } from './rate-limit.js';
 
 // The Durable Object class is imported for its *type* only, so this module
 // stays loadable outside the Workers runtime and the route table can be
@@ -57,6 +58,7 @@ app.onError((error, c) => {
 });
 
 app.post('/api/matches', async (c) => {
+  await guardCreation(c.env, c.req.header('cf-connecting-ip') ?? 'unknown');
   const body = await c.req.json<CreateMatchRequest>().catch(() => ({}) as CreateMatchRequest);
   // A returning player sends the token they already hold, which is what makes
   // a career accumulate rather than resetting every campaign.

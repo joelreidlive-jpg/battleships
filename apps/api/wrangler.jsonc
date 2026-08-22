@@ -19,6 +19,10 @@
       {
         "name": "MATCH",
         "class_name": "MatchDO"
+      },
+      {
+        "name": "RATE_LIMIT",
+        "class_name": "RateLimiterDO"
       }
     ]
   },
@@ -28,6 +32,10 @@
     {
       "tag": "v1",
       "new_sqlite_classes": ["MatchDO"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["RateLimiterDO"]
     }
   ],
   // A player's record outlives any one campaign, so it cannot live in a match
