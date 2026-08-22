@@ -51,6 +51,7 @@ pnpm dev:api        # Worker on :8787, with a local D1
 | `pnpm lint` | ESLint, including the import bans above |
 | `pnpm typecheck` | `tsc` across every project |
 | `pnpm test` | Vitest |
+| `pnpm e2e` | Playwright: plays the assembled game against a locally simulated Worker |
 | `pnpm build` | Type-check and build the client into `apps/web/dist` |
 | `pnpm docs` | Regenerate the published documents |
 | `pnpm docs:check` | Fail if they are out of date (CI runs this) |
