@@ -56,6 +56,44 @@ export function Board({
   const width = GUTTER + COLUMNS * CELL + 2;
   const height = GUTTER + ROWS * CELL + 2;
 
+  const renderCell = (cell: Cell) => {
+    const shot = byCell.get(cell);
+    const x = GUTTER + columnOf(cell) * CELL;
+    const y = GUTTER + rowOf(cell) * CELL;
+    const interactive = Boolean(onFire) && !disabled && !shot;
+    return (
+      <g
+        key={cell}
+        className={[
+          'cell',
+          shot ? `cell--${shot.outcome}` : '',
+          interactive ? 'cell--live' : '',
+          ghostCells.has(cell) ? (ghost?.legal ? 'cell--ghost' : 'cell--ghost-bad') : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+        onClick={interactive ? () => onFire?.(cell) : undefined}
+        // A cell is an order, so it has to be reachable from the keyboard too.
+        tabIndex={interactive ? 0 : undefined}
+        onKeyDown={
+          interactive
+            ? (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                event.preventDefault();
+                onFire?.(cell);
+              }
+            : undefined
+        }
+        onFocus={interactive ? () => onHover?.(cell) : undefined}
+        onMouseEnter={() => onHover?.(cell)}
+        role="gridcell"
+        aria-label={`${formatCell(cell)}${shot ? ` ${shot.outcome}` : ''}`}
+      >
+        <rect x={x} y={y} width={CELL} height={CELL} rx={3} />
+      </g>
+    );
+  };
+
   return (
     <section className="board">
       <header>
@@ -72,55 +110,28 @@ export function Board({
         aria-label={title}
         onMouseLeave={() => onHover?.(null)}
       >
-        {COLUMN_LABELS.map((label, column) => (
-          <text key={label} className="axis" x={GUTTER + column * CELL + CELL / 2} y={GUTTER - 9}>
-            {label}
-          </text>
-        ))}
-        {Array.from({ length: ROWS }, (_, row) => (
-          <text key={row} className="axis" x={GUTTER - 10} y={GUTTER + row * CELL + CELL / 2 + 5}>
-            {row + 1}
-          </text>
-        ))}
+        {/* The axes are decoration to a screen reader: every cell says where
+            it is in its own label. */}
+        <g aria-hidden="true">
+          {COLUMN_LABELS.map((label, column) => (
+            <text key={label} className="axis" x={GUTTER + column * CELL + CELL / 2} y={GUTTER - 9}>
+              {label}
+            </text>
+          ))}
+          {Array.from({ length: ROWS }, (_, row) => (
+            <text key={row} className="axis" x={GUTTER - 10} y={GUTTER + row * CELL + CELL / 2 + 5}>
+              {row + 1}
+            </text>
+          ))}
+        </g>
 
-        {Array.from({ length: ROWS * COLUMNS }, (_, index) => {
-          const cell = cellAt(index % COLUMNS, Math.floor(index / COLUMNS));
-          const shot = byCell.get(cell);
-          const x = GUTTER + columnOf(cell) * CELL;
-          const y = GUTTER + rowOf(cell) * CELL;
-          const interactive = Boolean(onFire) && !disabled && !shot;
-          return (
-            <g
-              key={cell}
-              className={[
-                'cell',
-                shot ? `cell--${shot.outcome}` : '',
-                interactive ? 'cell--live' : '',
-                ghostCells.has(cell) ? (ghost?.legal ? 'cell--ghost' : 'cell--ghost-bad') : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              onClick={interactive ? () => onFire?.(cell) : undefined}
-              // A cell is an order, so it has to be reachable from the keyboard too.
-              tabIndex={interactive ? 0 : undefined}
-              onKeyDown={
-                interactive
-                  ? (event) => {
-                      if (event.key !== 'Enter' && event.key !== ' ') return;
-                      event.preventDefault();
-                      onFire?.(cell);
-                    }
-                  : undefined
-              }
-              onFocus={interactive ? () => onHover?.(cell) : undefined}
-              onMouseEnter={() => onHover?.(cell)}
-              role="gridcell"
-              aria-label={`${formatCell(cell)}${shot ? ` ${shot.outcome}` : ''}`}
-            >
-              <rect x={x} y={y} width={CELL} height={CELL} rx={3} />
-            </g>
-          );
-        })}
+        {/* A grid owns rows, and rows own the cells: assistive technology reads
+            the board as ten rows of ten rather than a hundred loose cells. */}
+        {Array.from({ length: ROWS }, (_, row) => (
+          <g key={row} role="row" aria-label={`Row ${row + 1}`}>
+            {Array.from({ length: COLUMNS }, (_, column) => renderCell(cellAt(column, row)))}
+          </g>
+        ))}
 
         {/* Hulls sit above the cells so the grid does not paint over them, and
             below the shot marks so damage stays legible. */}
