@@ -140,7 +140,8 @@ function Rating({ label, value }: { label: string; value: number }) {
   return (
     <div className="rating">
       <dt>{label}</dt>
-      <dd aria-label={`${value} out of 5`}>
+      <dd>
+        <span className="offscreen">{value} out of 5</span>
         {Array.from({ length: 5 }, (_, index) => (
           <span key={index} className={index < value ? 'pip pip--on' : 'pip'} aria-hidden="true" />
         ))}
