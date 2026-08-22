@@ -47,3 +47,36 @@ jobs:
 
       - name: Build client
         run: pnpm build
+
+  e2e:
+    name: End-to-end smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install the browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      # Plays the assembled game against a locally simulated Worker: the client,
+      # the API, the Durable Object and D1, including the guarantee that the
+      # invader's deployment never reaches the browser mid-campaign.
+      - name: Smoke test
+        run: pnpm e2e
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
