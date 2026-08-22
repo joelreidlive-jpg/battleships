@@ -50,7 +50,7 @@ test('a captain can be commissioned, deploy a fleet and fight', async ({ page })
   await expect(invasion.getByRole('gridcell', { name: /^B1 (hit|miss|sunk)$/ })).toBeVisible();
 
   await page.getByRole('button', { name: 'Abandon defence' }).click();
-  await expect(page.getByText(/Earth is defeated/i)).toBeVisible();
+  await expect(page.locator('.flypast__words')).toHaveText(/Earth is defeated/i);
 
   expect(leaked, 'the invader deployment reached the browser mid-campaign').toEqual([]);
 });

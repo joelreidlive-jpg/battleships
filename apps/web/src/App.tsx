@@ -165,6 +165,8 @@ export function App() {
 
       {error ? <p className="alert">{error}</p> : null}
 
+      {match === null ? null : <Dispatch match={match} busy={busy} />}
+
       {commission === null ? (
         <Briefing
           onCommission={(signed) => {
@@ -198,6 +200,29 @@ export function App() {
 
       {manual ? <Manual onClose={() => setManual(false)} /> : null}
     </div>
+  );
+}
+
+/**
+ * The same news the log and the callouts carry, spoken once, for anyone
+ * playing by ear rather than by eye: what the last shot did, and who the grid
+ * is waiting on.
+ */
+function Dispatch({ match, busy }: { match: MatchView; busy: boolean }) {
+  const latest = match.log[match.log.length - 1];
+  const shot = latest ? `${latest.cell >= 0 ? `${formatCell(latest.cell)}. ` : ''}${latest.text}` : '';
+  const turn =
+    match.status === 'finished'
+      ? match.winner === 'earth'
+        ? 'Earth is saved.'
+        : 'Earth is defeated.'
+      : busy || match.turn !== 'earth'
+        ? 'The invader is firing.'
+        : 'Your orders, Captain.';
+  return (
+    <p className="offscreen" role="status">
+      {shot} {turn}
+    </p>
   );
 }
 

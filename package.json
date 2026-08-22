@@ -22,6 +22,7 @@
     "dev:web": "pnpm --filter @bs/web dev"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@bs/protocol": "workspace:^",
     "@eslint/js": "^9.39.5",
     "@playwright/test": "1.62.1",
