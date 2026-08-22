@@ -16,6 +16,7 @@ import {
 } from '@bs/rules';
 import { DOCTRINE_LIST, OPEN_HIT_WEIGHT } from '@bs/ai';
 import { API_ROUTES } from '@bs/protocol';
+import { CREATE_LIMIT, CREATE_WINDOW_MS } from '../../../apps/api/src/rate-limit.js';
 import { GENERATED_BANNER } from './banner.js';
 
 /**
@@ -482,6 +483,7 @@ function security(): string {
 | Token theft from storage | Only digests are stored, in both the Durable Object and D1. |
 | Predictable placement or targeting | All randomness comes from \`crypto.getRandomValues\` in production. |
 | XSS | The client renders no HTML from any input, and the Worker sets \`Content-Security-Policy: default-src 'self'\`, \`X-Content-Type-Options: nosniff\`, \`X-Frame-Options: DENY\` and \`Referrer-Policy: no-referrer\` on every response. |
+| Flooding the public endpoint | Campaign creation, the only unauthenticated write, is capped at ${CREATE_LIMIT} per address per ${CREATE_WINDOW_MS / 1000}s by a Durable Object holding a sliding window; over that it answers 429 with the wait. |
 | Supply chain | Dependencies are pinned by lockfile, reviewed by Dependabot and scanned by CodeQL on every pull request. |
 
 There are no secrets in the repository and none in the client bundle. The
