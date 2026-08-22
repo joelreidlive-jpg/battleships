@@ -18,7 +18,8 @@ if they drift.
 | Game guide | Anyone — rules, fleet, scoring, difficulty, career | [`docs/product/GAME.md`](docs/product/GAME.md) |
 | Technical specification | Rebuilding the game from scratch without the source | [`docs/technical/SPEC.md`](docs/technical/SPEC.md) |
 | OpenAPI contract | Tooling | [`docs/technical/openapi.yaml`](docs/technical/openapi.yaml) |
-| Codebase audit | Anyone reviewing quality — defects found, fixes, residual risks | [`docs/reports/AUDIT.md`](docs/reports/AUDIT.md) |
+| Bugs found and fixed | A one-page list of every defect and its fix | [`docs/reports/BUGS.md`](docs/reports/BUGS.md) |
+| Codebase audit | The reasoning behind each defect, the tests that hold it, residual risks | [`docs/reports/AUDIT.md`](docs/reports/AUDIT.md) |
 
 Both are also readable inside the game, under **Field manual**.
 
