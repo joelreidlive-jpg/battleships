@@ -48,7 +48,10 @@ test('a campaign under way is accessible', async ({ page }) => {
 
   expect(await violations(page)).toEqual([]);
 
-  // Playing by ear: what the shot did and who the grid waits on are spoken,
-  // not only drawn.
-  await expect(page.getByRole('status')).toContainText(/A1/);
+  // Playing by ear: what the last shot did and who the grid waits on are
+  // spoken, not only drawn. Which shot it names depends on whether the invader
+  // has answered yet, so the assertion is on the shape of the dispatch.
+  await expect(page.getByRole('status')).toContainText(
+    /^[A-J](?:10|[1-9])\. .+ (?:Your orders, Captain\.|The invader is firing\.)$/,
+  );
 });
