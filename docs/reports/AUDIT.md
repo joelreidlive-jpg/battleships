@@ -39,8 +39,10 @@ Also checked and found correct, so no change was made: shot resolution and scori
 the AI is allowed to see, campaign concurrency, token storage, leaderboard ranking, the pacing that
 holds the invader's reply, audio ordering, and documentation drift.
 
-Not verified, and honest about it: audio has never been judged by ear from the build machine, and
-the touch fix has not been run on a physical device.
+Verified since: the audio and the touch/phone experience were confirmed by hand on a real device.
+They could not be judged from the build machine, which has no audible output and no touchscreen.
+
+A one-page version of this report, without the reasoning, is at [BUGS.md](./BUGS.md).
 
 The detail behind every line of this table follows.
 
