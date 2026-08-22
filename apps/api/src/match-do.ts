@@ -80,6 +80,9 @@ export class MatchDO extends DurableObject<Env> {
     if (this.meta) throw new MatchError('campaign already exists', 409);
 
     const difficulty: Difficulty = isDifficulty(request.difficulty) ? request.difficulty : 'raider';
+    if (request.fleet !== undefined && !Array.isArray(request.fleet)) {
+      throw new MatchError('the deployment is not a fleet', 400);
+    }
     const earthFleet = request.fleet ? [...request.fleet] : randomFleet(cryptoRng);
     if (request.fleet) {
       const problem = validateFleet(earthFleet);

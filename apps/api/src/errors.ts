@@ -25,6 +25,11 @@ export class MatchError extends Error {
  */
 const TAGGED = /(?:^|:\s)\[(\d{3})\]\s([\s\S]*)$/;
 
+/** A tag is only believed if it names a status a response can actually carry. */
+function isClientStatus(status: number): boolean {
+  return status >= 400 && status <= 599;
+}
+
 export interface Failure {
   readonly status: number;
   readonly message: string;
@@ -39,6 +44,6 @@ export interface Failure {
 export function failureFor(error: unknown): Failure {
   if (error instanceof MatchError) return { status: error.status, message: error.detail };
   const tagged = error instanceof Error ? TAGGED.exec(error.message) : null;
-  if (tagged) return { status: Number(tagged[1]), message: tagged[2] };
+  if (tagged && isClientStatus(Number(tagged[1]))) return { status: Number(tagged[1]), message: tagged[2] };
   return { status: 500, message: 'the defence grid is offline' };
 }

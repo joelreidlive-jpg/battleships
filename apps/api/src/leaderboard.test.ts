@@ -87,6 +87,17 @@ describe('the board', () => {
     expect(entries[0].you).toBe(true);
   });
 
+  it('marks only the best of the caller’s rows', async () => {
+    const mine = [
+      ...rows,
+      row({ score: 12000, achieved_at: 4, player_id: 'me' }),
+      row({ score: 6000, achieved_at: 5, player_id: 'me' }),
+    ];
+    const { entries, yourRank } = await board(fakeDb(mine), 'me');
+    expect(yourRank).toBe(1);
+    expect(entries.filter((entry) => entry.you).map((entry) => entry.rank)).toEqual([1]);
+  });
+
   it('carries the caller along when they are off the bottom of the board', async () => {
     const many = [
       ...Array.from({ length: 30 }, (_, index) => row({ score: 20000 + index, achieved_at: index })),

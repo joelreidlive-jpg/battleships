@@ -38,8 +38,19 @@ export function Deploy({ onLaunch, busy, starfleet }: DeployProps) {
   const candidate: Placement | null =
     next !== undefined && hover !== null ? { hull: next, origin: hover, orientation } : null;
   const occupied = useMemo(() => new Set(placed.flatMap(placementCells)), [placed]);
-  const legal =
-    candidate !== null && fitsOnGrid(candidate) && placementCells(candidate).every((cell) => !occupied.has(cell));
+
+  /**
+   * Whether the next hull may sit on `origin`. Asked of the cell that was
+   * actually chosen rather than of the hovered one, because a touch screen
+   * reports no hover at all and the deployment would otherwise be unreachable.
+   */
+  const legalAt = (origin: Cell): boolean => {
+    if (next === undefined) return false;
+    const placement: Placement = { hull: next, origin, orientation };
+    return fitsOnGrid(placement) && placementCells(placement).every((cell) => !occupied.has(cell));
+  };
+
+  const legal = candidate !== null && legalAt(candidate.origin);
 
   const complete = validateFleet(placed) === null;
 
@@ -51,8 +62,8 @@ export function Deploy({ onLaunch, busy, starfleet }: DeployProps) {
         shots={[]}
         fleet={placed}
         onFire={(cell) => {
-          if (!candidate || !legal) return;
-          setPlaced([...placed, { ...candidate, origin: cell }]);
+          if (next === undefined || !legalAt(cell)) return;
+          setPlaced([...placed, { hull: next, origin: cell, orientation }]);
         }}
         onHover={setHover}
         ghost={candidate ? { cells: fitsOnGrid(candidate) ? placementCells(candidate) : [candidate.origin], legal } : undefined}
