@@ -2,6 +2,8 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
+    // page.evaluate runs in the browser, so these files speak DOM too.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "composite": false,
     "declaration": false,
     "declarationMap": false
